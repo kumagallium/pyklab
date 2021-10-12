@@ -5,8 +5,6 @@ import zipfile
 import os
 import shutil
 import pandas as pd
-import pymatgen as mg
-
 
 class Datasets:
 
