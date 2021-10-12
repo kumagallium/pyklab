@@ -32,6 +32,7 @@ importlib-metadata @ file:///Users/runner/miniforge3/conda-bld/importlib-metadat
 ipykernel @ file:///Users/runner/miniforge3/conda-bld/ipykernel_1631291130928/work/dist/ipykernel-6.4.1-py3-none-any.whl
 ipython @ file:///Users/runner/miniforge3/conda-bld/ipython_1632764055494/work
 ipython-genutils==0.2.0
+ipywidgets @ file:///home/conda/feedstock_root/build_artifacts/ipywidgets_1631590360471/work
 itsdangerous @ file:///home/conda/feedstock_root/build_artifacts/itsdangerous_1621360792037/work
 jedi @ file:///Users/runner/miniforge3/conda-bld/jedi_1610146833874/work
 Jinja2 @ file:///home/conda/feedstock_root/build_artifacts/jinja2_1633656206378/work
@@ -43,6 +44,7 @@ jupyter-server @ file:///home/conda/feedstock_root/build_artifacts/jupyter_serve
 jupyterlab @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_1633634490182/work
 jupyterlab-pygments @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_pygments_1601375948261/work
 jupyterlab-server @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_server_1632590716858/work
+jupyterlab-widgets @ file:///home/conda/feedstock_root/build_artifacts/jupyterlab_widgets_1631590465624/work
 kiwisolver @ file:///Users/runner/miniforge3/conda-bld/kiwisolver_1630173767644/work
 latexcodec @ file:///home/conda/feedstock_root/build_artifacts/latexcodec_1592937263153/work
 loguru @ file:///Users/runner/miniforge3/conda-bld/loguru_1618589874299/work
@@ -111,4 +113,5 @@ wcwidth @ file:///home/conda/feedstock_root/build_artifacts/wcwidth_160096578139
 webencodings==0.5.1
 websocket-client @ file:///Users/runner/miniforge3/conda-bld/websocket-client_1610127684558/work
 Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1621518206714/work
+widgetsnbextension @ file:///Users/runner/miniforge3/conda-bld/widgetsnbextension_1605475527869/work
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1633302054558/work

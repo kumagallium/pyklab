@@ -87,6 +87,7 @@ https://conda.anaconda.org/conda-forge/noarch/idna-3.1-pyhd3deb0d_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/ipython_genutils-0.2.0-py_1.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/itsdangerous-2.0.1-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/json5-0.9.5-pyh9f0ad1d_0.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/jupyterlab_widgets-1.0.2-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/osx-64/lcms2-2.12-h577c468_0.tar.bz2
 https://conda.anaconda.org/conda-forge/osx-64/libblas-3.9.0-11_osx64_openblas.tar.bz2
 https://conda.anaconda.org/conda-forge/osx-64/libcurl-7.79.1-hf45b732_1.tar.bz2
@@ -203,4 +204,6 @@ https://conda.anaconda.org/conda-forge/noarch/jupyter_server-1.11.1-pyhd8ed1ab_0
 https://conda.anaconda.org/conda-forge/noarch/notebook-6.4.4-pyha770c72_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/jupyterlab_server-2.8.2-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/nbclassic-0.3.2-pyhd8ed1ab_0.tar.bz2
+https://conda.anaconda.org/conda-forge/osx-64/widgetsnbextension-3.5.1-py38h50d1736_4.tar.bz2
+https://conda.anaconda.org/conda-forge/noarch/ipywidgets-7.6.5-pyhd8ed1ab_0.tar.bz2
 https://conda.anaconda.org/conda-forge/noarch/jupyterlab-3.1.18-pyhd8ed1ab_0.tar.bz2
