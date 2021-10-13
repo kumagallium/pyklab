@@ -5,6 +5,7 @@ channels:
 dependencies:
   - anyio=3.3.3
   - appnope=0.1.2
+  - argcomplete=1.12.3
   - argon2-cffi=21.1.0
   - ase=3.22.0
   - async_generator=1.10
@@ -23,7 +24,6 @@ dependencies:
   - cffi=1.14.6
   - cftime=1.5.1
   - chardet=4.0.0
-  - charset-normalizer=2.0.0
   - click=8.0.3
   - colorama=0.4.4
   - cryptography=3.4.8
@@ -50,9 +50,10 @@ dependencies:
   - hdf4=4.2.15
   - hdf5=1.10.6
   - icu=68.1
-  - idna=3.1
+  - idna=2.10
   - importlib-metadata=4.8.1
-  - ipykernel=6.4.1
+  - importlib_metadata=4.8.1
+  - ipykernel=6.4.0
   - ipython=7.28.0
   - ipython_genutils=0.2.0
   - ipywidgets=7.6.5
@@ -160,15 +161,15 @@ dependencies:
   - pyparsing=2.4.7
   - pyrsistent=0.17.3
   - pysocks=1.7.1
-  - python=3.8.12
+  - python=3.7.10
   - python-dateutil=2.8.2
-  - python_abi=3.8
+  - python_abi=3.7
   - pytz=2021.3
   - pyyaml=5.4.1
   - pyzmq=22.3.0
   - qt=5.12.9
   - readline=8.1
-  - requests=2.26.0
+  - requests=2.25.1
   - requests-unixsocket=0.2.0
   - ruamel.yaml=0.17.16
   - ruamel.yaml.clib=0.2.2
@@ -191,6 +192,8 @@ dependencies:
   - tornado=6.1
   - tqdm=4.62.3
   - traitlets=5.1.0
+  - typing-extensions=3.10.0.2
+  - typing_extensions=3.10.0.2
   - uncertainties=3.1.6
   - urllib3=1.26.7
   - utfcpp=3.2.1
