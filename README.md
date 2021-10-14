@@ -36,7 +36,7 @@ conda install -y -c conda-forge pymatgen beautifulesoup4 ipywidgets
 ```sh
 cd YOUR_WORKSPACE
 git clone https://github.com/kumagallium/pyklab.git
-conda create -n pyklab_dev --file pyklab/conda_env.txt
+conda env create -n pyklab -f pyklab/conda_env.yml
 jupyter lab
 ```
 <img width="1180" alt="vpd-image" src="docs/images/jupyterlab.png">
