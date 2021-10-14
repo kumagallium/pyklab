@@ -2,6 +2,13 @@
 This repository is a library for Materials Informatics published by Assistant Professor <a href="https://researchmap.jp/mkumagai?lang=en">Masaya Kumagai</a> at Kyoto University.
 
 ## ENVIRONMENT SETUP
+Set up an environment with a directory tree structure like the following.
+```
+|-YOUR_WORKSPACE
+  |- pyklab(<-get it from Github)
+  |- ~~.ipynb
+```
+
 ### <b>○ GUI (Anaconda Navigator)</b>
 #### 1. Download the source code from the "Download ZIP" button under "Code" in this repository.
 
@@ -33,6 +40,7 @@ conda create -n pyklab_dev --file pyklab/conda_env.txt
 jupyter lab
 ```
 <img width="1180" alt="vpd-image" src="docs/images/jupyterlab.png">
+<br><br>
 
 ## How to use
 On jupyterlab, you can start using this library by importing pyklab.
