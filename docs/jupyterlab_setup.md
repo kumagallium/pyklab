@@ -7,7 +7,7 @@
 <img width="1180" alt="vpd-image" src="images/anaconda_top.png">
 <br><br>
 
-### 3. Switch to the Environments tab
+### 3. Switch to the Environments tab and press the "Create" button at the bottom of the page.
 
 <img width="1180" alt="vpd-image" src="images/anaconda_env.png">
 <br><br>
