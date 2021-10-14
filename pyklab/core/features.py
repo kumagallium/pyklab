@@ -37,9 +37,9 @@ class Features:
     def getcompdict(self,composition):
         return dict(mg.Composition(composition).fractional_composition.get_el_amt_dict())
 
-    def ave(self,composition,property):
+    def ave(self,composition,description):
         composition = self.getcompdict(composition)
-        if property == "group":
+        if description == "group":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
@@ -48,7 +48,7 @@ class Features:
             elif len(composition) == 1:
                 tmp = mg.Element(list(composition.keys())[0]).group
                 return tmp
-        elif property == "row":
+        elif description == "row":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
@@ -57,7 +57,7 @@ class Features:
             elif len(composition) == 1:
                 tmp = mg.Element(list(composition.keys())[0]).row
                 return tmp
-        elif property == "VEC":
+        elif description == "VEC":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
@@ -66,111 +66,111 @@ class Features:
             elif len(composition) == 1:
                 tmp = self.getVEC(list(composition.keys())[0])
                 return tmp
-        elif property == "Molar volume":
+        elif description == "Molar volume":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[property].split("cm<sup>3</sup>")[0])*frac / sum(composition.values())
+                    tmp += float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[property].split("cm<sup>3</sup>")[0])
+                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("cm<sup>3</sup>")[0])
                 return tmp
-        elif property == "Bulk modulus":
+        elif description == "Bulk modulus":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[property].split("(liquid)GPa")[0].split("GPa")[0])*frac / sum(composition.values())
+                    tmp += float(mg.Element(el).data[description].split("(liquid)GPa")[0].split("GPa")[0])*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[property].split("(liquid)GPa")[0].split("GPa")[0])
+                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("(liquid)GPa")[0].split("GPa")[0])
                 return tmp
-        elif property == "Melting point":
+        elif description == "Melting point":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[property].split("K")[0])*frac / sum(composition.values())
+                    tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[property].split("K")[0])
+                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
                 return tmp
-        elif property == "Boiling point":
+        elif description == "Boiling point":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[property].split("K")[0])*frac / sum(composition.values())
+                    tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[property].split("K")[0])
+                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
                 return tmp
         else:
             if len(composition) > 1:
                 try:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += mg.Element(el).data[property]*frac / sum(composition.values())
+                        tmp += mg.Element(el).data[description]*frac / sum(composition.values())
                     return tmp
                 except:
                     print("error")
                     pass
             elif len(composition) == 1:
-                tmp = mg.Element(list(composition.keys())[0]).data[property]
+                tmp = mg.Element(list(composition.keys())[0]).data[description]
                 return tmp
 
-    def var(self,composition,property):
+    def var(self,composition,description):
         composition = self.getcompdict(composition=composition)
-        if property == "group":
+        if description == "group":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((mg.Element(el).group-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((mg.Element(el).group-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "row":
+        elif description == "row":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((mg.Element(el).row-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((mg.Element(el).row-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "VEC":
+        elif description == "VEC":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((self.getVEC(el)-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((self.getVEC(el)-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "Molar volume":
+        elif description == "Molar volume":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp +=( (float(mg.Element(el).data[property].split("cm<sup>3</sup>")[0])-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp +=( (float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "Bulk modulus":
+        elif description == "Bulk modulus":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((float(mg.Element(el).data[property].split("(liquid)GPa")[0].split("GPa")[0])-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((float(mg.Element(el).data[description].split("(liquid)GPa")[0].split("GPa")[0])-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "Melting point":
+        elif description == "Melting point":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((float(mg.Element(el).data[property].split("K")[0])-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((float(mg.Element(el).data[description].split("K")[0])-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
-        elif property == "Boiling point":
+        elif description == "Boiling point":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((float(mg.Element(el).data[property].split("K")[0])-self.ave(composition,property))**2)*frac / sum(composition.values())
+                    tmp += ((float(mg.Element(el).data[description].split("K")[0])-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
@@ -179,16 +179,16 @@ class Features:
                 try:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += ((mg.Element(el).data[property]-self.ave(composition,property))**2)*frac / sum(composition.values())
+                        tmp += ((mg.Element(el).data[description]-self.ave(composition,description))**2)*frac / sum(composition.values())
                     return tmp
                 except:
                     pass
             elif len(composition) == 1:
                 return 0
 
-    def main_max1min1diff(self,composition,property):
+    def main_max1min1diff(self,composition,description):
         composition = self.getcompdict(composition=composition)
-        if property == "group":
+        if description == "group":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
@@ -201,7 +201,7 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-        elif property == "row":
+        elif description == "row":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
@@ -214,7 +214,7 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-        elif property == "VEC":
+        elif description == "VEC":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
@@ -228,12 +228,12 @@ class Features:
             elif len(composition) == 1:
                 return 0
             
-        elif property == "Molar volume":
+        elif description == "Molar volume":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
                 for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(mg.Element(el).data[property].split("cm<sup>3</sup>")[0])
+                    val = float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])
                     if val >= maxval:
                         maxval = val
                     if val <= minval:
@@ -241,26 +241,12 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-        elif property == "Boiling point":
+        elif description == "Boiling point":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
                 for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(mg.Element(el).data[property].split("K")[0])
-                    if val >= maxval:
-                        maxval = val
-                    if val <= minval:
-                        minval = val
-                return np.abs(maxval - minval)
-            elif len(composition) == 1:
-                return 0
-            
-        elif property == "Bulk modulus":
-            if len(composition) > 1:
-                maxval = 0
-                minval = 1000000
-                for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(mg.Element(el).data[property].split("(liquid)GPa")[0].split("GPa")[0])
+                    val = float(mg.Element(el).data[description].split("K")[0])
                     if val >= maxval:
                         maxval = val
                     if val <= minval:
@@ -269,12 +255,26 @@ class Features:
             elif len(composition) == 1:
                 return 0
             
-        elif property == "Melting point":
+        elif description == "Bulk modulus":
             if len(composition) > 1:
                 maxval = 0
                 minval = 1000000
                 for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(mg.Element(el).data[property].split("K")[0])
+                    val = float(mg.Element(el).data[description].split("(liquid)GPa")[0].split("GPa")[0])
+                    if val >= maxval:
+                        maxval = val
+                    if val <= minval:
+                        minval = val
+                return np.abs(maxval - minval)
+            elif len(composition) == 1:
+                return 0
+            
+        elif description == "Melting point":
+            if len(composition) > 1:
+                maxval = 0
+                minval = 1000000
+                for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
+                    val = float(mg.Element(el).data[description].split("K")[0])
                     if val >= maxval:
                         maxval = val
                     if val <= minval:
@@ -289,7 +289,7 @@ class Features:
                     maxval = 0
                     minval = 1000000
                     for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                        val = float(mg.Element(el).data[property])
+                        val = float(mg.Element(el).data[description])
                         if val >= maxval:
                             maxval = val
                         if val <= minval:
@@ -300,29 +300,35 @@ class Features:
             elif len(composition) == 1:
                 return 0
 
-    def getCompProps(self,composition,proplist=["Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
+    def getCompDesc(self,composition,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
         try:
             compdict = self.getcompdict(composition=composition)
             
             comp_length = len(compdict)
             compbase_length = len(np.array(list(compdict.keys()))[np.array(list(compdict.values()))>=0.1])
-            response = {"comp_length":comp_length,"compbase_length":compbase_length}
+            response = {}
+            if "comp_length" in desclist:
+                response.update({"comp_length":comp_length})
+                desclist.remove("comp_length")
+            if "compbase_length" in desclist:
+                response.update({"compbase_length":compbase_length})
+                desclist.remove("compbase_length")
             
-            for prop in proplist:
-                response.update({"ave:"+prop:self.ave(compdict,prop),"var:"+prop:self.var(compdict,prop),"main_max1min1diff:"+prop:self.main_max1min1diff(compdict,prop)})
+            for desc in desclist:
+                response.update({"ave:"+desc:self.ave(compdict,desc),"var:"+desc:self.var(compdict,desc),"main_max1min1diff:"+desc:self.main_max1min1diff(compdict,desc)})
             
             return response
         except:
             response = {"comp_length":np.nan,"compbase_length":np.nan}
-            for prop in proplist:
-                response.update({"ave:"+prop:np.nan,"var:"+prop:np.nan,"main_max1min1diff:"+prop:np.nan})#,"harm:"+prop:np.nan})
+            for desc in desclist:
+                response.update({"ave:"+desc:np.nan,"var:"+desc:np.nan,"main_max1min1diff:"+desc:np.nan})#,"harm:"+feat:np.nan})
             return response
 
-    def getCompPropsFeature(self,complist):
+    def getCompDescFeatures(self,complist,featlist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
         features = []
         for comp in tqdm(complist):
             tmp = {"composition":comp}
-            tmp.update(self.getCompProps(comp))
+            tmp.update(self.getCompDesc(comp,featlist))
             features.append(tmp)
         df_feature = pd.DataFrame(features)
         return df_feature
