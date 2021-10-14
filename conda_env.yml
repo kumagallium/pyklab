@@ -5,7 +5,6 @@ channels:
 dependencies:
   - anyio=3.3.3
   - appnope=0.1.2
-  - argcomplete=1.12.3
   - argon2-cffi=21.1.0
   - ase=3.22.0
   - async_generator=1.10
@@ -52,8 +51,7 @@ dependencies:
   - icu=68.1
   - idna=2.10
   - importlib-metadata=4.8.1
-  - importlib_metadata=4.8.1
-  - ipykernel=6.4.0
+  - ipykernel=6.4.1
   - ipython=7.28.0
   - ipython_genutils=0.2.0
   - ipywidgets=7.6.5
@@ -82,11 +80,11 @@ dependencies:
   - libcblas=3.9.0
   - libclang=11.1.0
   - libcurl=7.79.1
-  - libcxx=12.0.1
+  - libcxx=12.0.0
   - libdeflate=1.7
   - libedit=3.1.20191231
   - libev=4.33
-  - libffi=3.4.2
+  - libffi=3.3
   - libgfortran=5.0.0
   - libgfortran5=9.3.0
   - libiconv=1.16
@@ -106,7 +104,6 @@ dependencies:
   - libwebp-base=1.2.1
   - libxml2=2.9.12
   - libzip=1.8.0
-  - libzlib=1.2.11
   - llvm-openmp=12.0.1
   - loguru=0.5.3
   - lz4-c=1.9.3
@@ -146,7 +143,7 @@ dependencies:
   - pexpect=4.8.0
   - pickleshare=0.7.5
   - pillow=8.3.2
-  - pip=21.3
+  - pip=21.2.4
   - plotly=5.3.1
   - proj=8.1.1
   - prometheus_client=0.11.0
@@ -161,9 +158,9 @@ dependencies:
   - pyparsing=2.4.7
   - pyrsistent=0.17.3
   - pysocks=1.7.1
-  - python=3.7.10
+  - python=3.8.11
   - python-dateutil=2.8.2
-  - python_abi=3.7
+  - python_abi=3.8
   - pytz=2021.3
   - pyyaml=5.4.1
   - pyzmq=22.3.0
@@ -175,7 +172,7 @@ dependencies:
   - ruamel.yaml.clib=0.2.2
   - scipy=1.7.1
   - send2trash=1.8.0
-  - setuptools=58.2.0
+  - setuptools=58.0.4
   - six=1.16.0
   - sniffio=1.2.0
   - soupsieve=2.0.1
@@ -192,8 +189,6 @@ dependencies:
   - tornado=6.1
   - tqdm=4.62.3
   - traitlets=5.1.0
-  - typing-extensions=3.10.0.2
-  - typing_extensions=3.10.0.2
   - uncertainties=3.1.6
   - urllib3=1.26.7
   - utfcpp=3.2.1
@@ -211,4 +206,4 @@ dependencies:
   - zipp=3.6.0
   - zlib=1.2.11
   - zstd=1.5.0
-prefix: /Users/m-kumagai/.pyenv/versions/anaconda3-5.3.1/envs/pyklab
+prefix: /Users/m-kumagai/opt/anaconda3/envs/pyklab
