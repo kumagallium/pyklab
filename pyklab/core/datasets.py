@@ -15,7 +15,7 @@ class Datasets:
         self.dtype = dtype
 
     def info(self):
-        print("Database is '{self.dbname}({self.dtype})'")
+        print("Database is '"+self.dbname+"("+self.dtype+")'")
 
     def setSigFig(val):
         try:
