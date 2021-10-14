@@ -5,7 +5,7 @@ This repository is a library for Materials Informatics published by Assistant Pr
 ### <b>○ GUI (Anaconda Navigator)</b>
 #### 1. Download the source code from the "Download ZIP" button under "Code" in this repository.
 
-<img width="1180" alt="vpd-image" src="docs/images/github.png">
+<img width="1180" alt="vpd-image" src="docs/images/github.PNG">
 <br><br>
 
 #### 2. Unzip the downloaded zip file and copy or move the extracted directory to your working space. Please modify the name of the directory from "pyklab-main" to "pyklab".
