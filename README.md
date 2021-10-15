@@ -9,20 +9,23 @@ Set up an environment with a directory tree structure like the following.
   |- ~~.ipynb
 ```
 
-### <b>○ GUI (Anaconda Navigator)</b>
-#### 1. Download the source code from the "Download ZIP" button under "Code" in this repository.
-
-<img width="1180" alt="vpd-image" src="docs/images/github.PNG">
-<br><br>
-
-#### 2. Unzip the downloaded zip file and copy or move the extracted directory to your working space. Please modify the name of the directory from "pyklab-main" to "pyklab".
-
-#### 3. After [starting jupyterlab](docs/jupyterlab_setup.md), create new notebook for the installation and run the following command.
+### <b>○ GUI</b>
+#### 1. After [starting jupyterlab](docs/jupyterlab_setup.md), create new notebook (e.g. setup.ipynb) for setup and run the following commands on the notebook.
 ```
-conda install -y -c conda-forge pymatgen beautifulesoup4 ipywidgets
+!conda install -y -c conda-forge pymatgen beautifulesoup4 ipywidgets git
+```
+```
+!git clone https://github.com/kumagallium/pyklab.git
 ```
 
 <img width="1180" alt="vpd-image" src="docs/images/jupyterlab_install.png">
+<br><br>
+
+#### 2. If you want to update the library to the latest version, please run the following command on your workspace.
+```
+!git --git-dir=pyklab/.git pull
+```
+
 ※You can also use the Anaconda prompt to do the installation, but here we show you how to do it without seeing the black command screen.
 
 ※For detailed usage of jupyterlab, please see other sites.
@@ -41,6 +44,12 @@ jupyter lab
 ```
 <img width="1180" alt="vpd-image" src="docs/images/jupyterlab.png">
 <br><br>
+
+#### 3. If you want to update the library to the latest version, please execute the following commands.
+```
+cd pyklab
+git pull
+```
 
 ## How to use
 On jupyterlab, you can start using this library by importing pyklab.
