@@ -67,4 +67,4 @@ from pyklab import pyklab
 5. Create a new Pull Request
 
 ## License
-Labmine is developed and maintained by Masaya Kumagai, under [MIT License](LICENSE).
+pyklab is developed and maintained by Masaya Kumagai, under [MIT License](LICENSE).
