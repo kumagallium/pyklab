@@ -110,7 +110,6 @@ class Features:
                         tmp += mg.Element(el).data[description]*frac / sum(composition.values())
                     return tmp
                 except:
-                    print("error")
                     pass
             elif len(composition) == 1:
                 tmp = mg.Element(list(composition.keys())[0]).data[description]
@@ -307,28 +306,39 @@ class Features:
             comp_length = len(compdict)
             compbase_length = len(np.array(list(compdict.keys()))[np.array(list(compdict.values()))>=0.1])
             response = {}
-            if "comp_length" in desclist:
+            desc_tmp = desclist.copy()
+            if "comp_length" in desc_tmp:
                 response.update({"comp_length":comp_length})
-                desclist.remove("comp_length")
-            if "compbase_length" in desclist:
+                desc_tmp.remove("comp_length")
+
+            if "compbase_length" in desc_tmp:
                 response.update({"compbase_length":compbase_length})
-                desclist.remove("compbase_length")
+                desc_tmp.remove("compbase_length")
             
-            for desc in desclist:
+            for desc in desc_tmp:
                 response.update({"ave:"+desc:self.ave(compdict,desc),"var:"+desc:self.var(compdict,desc),"main_max1min1diff:"+desc:self.main_max1min1diff(compdict,desc)})
             
             return response
         except:
-            response = {"comp_length":np.nan,"compbase_length":np.nan}
-            for desc in desclist:
+            response = {}
+            desc_tmp = desclist.copy()
+            if "comp_length" in desc_tmp:
+                response.update({"comp_length":np.nan})
+                desc_tmp.remove("comp_length")
+
+            if "compbase_length" in desc_tmp:
+                response.update({"compbase_length":np.nan})
+                desc_tmp.remove("compbase_length")
+                
+            for desc in desc_tmp:
                 response.update({"ave:"+desc:np.nan,"var:"+desc:np.nan,"main_max1min1diff:"+desc:np.nan})#,"harm:"+feat:np.nan})
             return response
 
-    def getCompDescFeatures(self,complist,featlist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
+    def getCompDescFeatures(self,complist,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
         features = []
         for comp in tqdm(complist):
             tmp = {"composition":comp}
-            tmp.update(self.getCompDesc(comp,featlist))
+            tmp.update(self.getCompDesc(comp,desclist))
             features.append(tmp)
         df_feature = pd.DataFrame(features)
         return df_feature
