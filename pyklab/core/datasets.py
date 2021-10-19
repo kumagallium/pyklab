@@ -71,3 +71,6 @@ class Datasets:
                 df_data = pd.DataFrame([])
 
         return df_data
+
+    def getDense(self, df, columns=[]):
+        return  df[columns].dropna().reset_index(drop=True)
