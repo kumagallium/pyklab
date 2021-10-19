@@ -12,7 +12,11 @@ Set up an environment with a directory tree structure like the following.
 ### <b>○ GUI</b>
 #### 1. After [starting jupyterlab](docs/jupyterlab_setup.md), create new notebook (e.g. setup.ipynb) for setup and run the following commands on the notebook.
 ```
-!conda install -y -c conda-forge pymatgen beautifulsoup4 ipywidgets git
+!conda config --add channels conda-forge
+!conda config --add channels anaconda
+!conda install -y beautifulsoup4 ipywidgets git nodejs
+!pip install pycaret pymatgen
+!jupyter labextension install @jupyter-widgets/jupyterlab-manager
 ```
 ```
 !git clone https://github.com/kumagallium/pyklab.git
