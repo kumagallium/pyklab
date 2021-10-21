@@ -66,5 +66,3 @@ class Datasets:
 
         return df_data
 
-    def get_dense(self, df, columns=[]):
-        return df[columns].dropna().reset_index(drop=True)
