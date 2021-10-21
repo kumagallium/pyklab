@@ -182,6 +182,8 @@ dependencies:
     - scikit-plot==0.3.7
     - scipy==1.5.4
     - seaborn==0.11.2
+    - shap==0.40.0
+    - slicer==0.0.7
     - smart-open==5.2.1
     - smmap==4.0.0
     - spacy==2.3.7
