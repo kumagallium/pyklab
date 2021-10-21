@@ -3,12 +3,13 @@ import numpy as np
 import pandas as pd
 from tqdm.notebook import tqdm
 
+
 class Features:
 
     def info(self):
         print("featurename is " + self.featurename)
-    
-    def getVEC(self,elementstr):
+
+    def get_VEC(self, elementstr):
         elobj = mg.Element(elementstr)
         VEC = 0
         if elobj.is_lanthanoid:
@@ -33,12 +34,12 @@ class Features:
                 VEC = 0
 
         return VEC
-    
-    def getcompdict(self,composition):
+
+    def get_comp_dict(self, composition):
         return dict(mg.Composition(composition).fractional_composition.get_el_amt_dict())
 
-    def ave(self,composition,description):
-        composition = self.getcompdict(composition)
+    def ave(self, composition, description):
+        composition = self.get_comp_dict(composition)
         if description == "group":
             if len(composition) > 1:
                 tmp = 0
@@ -61,10 +62,10 @@ class Features:
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += self.getVEC(el)*frac / sum(composition.values())
+                    tmp += self.get_VEC(el)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = self.getVEC(list(composition.keys())[0])
+                tmp = self.get_VEC(list(composition.keys())[0])
                 return tmp
         elif description == "Molar volume":
             if len(composition) > 1:
@@ -115,8 +116,8 @@ class Features:
                 tmp = mg.Element(list(composition.keys())[0]).data[description]
                 return tmp
 
-    def var(self,composition,description):
-        composition = self.getcompdict(composition=composition)
+    def var(self, composition, description):
+        composition = self.get_comp_dict(composition=composition)
         if description == "group":
             if len(composition) > 1:
                 tmp = 0
@@ -137,7 +138,7 @@ class Features:
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += ((self.getVEC(el)-self.ave(composition,description))**2)*frac / sum(composition.values())
+                    tmp += ((self.get_VEC(el)-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
@@ -185,8 +186,8 @@ class Features:
             elif len(composition) == 1:
                 return 0
 
-    def main_max1min1diff(self,composition,description):
-        composition = self.getcompdict(composition=composition)
+    def main_max1min1diff(self, composition, description):
+        composition = self.get_comp_dict(composition=composition)
         if description == "group":
             if len(composition) > 1:
                 maxval = 0
@@ -218,7 +219,7 @@ class Features:
                 maxval = 0
                 minval = 1000000
                 for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(self.getVEC(el))
+                    val = float(self.get_VEC(el))
                     if val >= maxval:
                         maxval = val
                     if val <= minval:
@@ -253,7 +254,7 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-            
+
         elif description == "Bulk modulus":
             if len(composition) > 1:
                 maxval = 0
@@ -267,7 +268,7 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-            
+
         elif description == "Melting point":
             if len(composition) > 1:
                 maxval = 0
@@ -281,7 +282,7 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
-            
+
         else:
             if len(composition) > 1:
                 try:
@@ -299,10 +300,10 @@ class Features:
             elif len(composition) == 1:
                 return 0
 
-    def getCompDesc(self,composition,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
+    def get_comp_desc(self,composition,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
         try:
-            compdict = self.getcompdict(composition=composition)
-            
+            compdict = self.get_comp_dict(composition=composition)
+
             comp_length = len(compdict)
             compbase_length = len(np.array(list(compdict.keys()))[np.array(list(compdict.values()))>=0.1])
             response = {}
@@ -314,10 +315,10 @@ class Features:
             if "compbase_length" in desc_tmp:
                 response.update({"compbase_length":compbase_length})
                 desc_tmp.remove("compbase_length")
-            
+
             for desc in desc_tmp:
-                response.update({"ave:"+desc:self.ave(compdict,desc),"var:"+desc:self.var(compdict,desc),"main_max1min1diff:"+desc:self.main_max1min1diff(compdict,desc)})
-            
+                response.update({"ave:"+desc: self.ave(compdict,desc), "var:"+desc: self.var(compdict,desc), "main_max1min1diff:"+desc: self.main_max1min1diff(compdict,desc)})
+
             return response
         except:
             response = {}
@@ -329,17 +330,16 @@ class Features:
             if "compbase_length" in desc_tmp:
                 response.update({"compbase_length":np.nan})
                 desc_tmp.remove("compbase_length")
-                
+
             for desc in desc_tmp:
                 response.update({"ave:"+desc:np.nan,"var:"+desc:np.nan,"main_max1min1diff:"+desc:np.nan})#,"harm:"+feat:np.nan})
             return response
 
-    def getCompDescFeatures(self,complist,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
+    def get_comp_descfeatures(self, complist, desclist=["comp_length", "compbase_length", "Atomic no", "group", "row", "Mendeleev no", "Atomic mass", "Atomic radius", "X", "VEC"]):
         features = []
         for comp in tqdm(complist):
-            tmp = {"composition":comp}
-            tmp.update(self.getCompDesc(comp,desclist))
+            tmp = {"composition": comp}
+            tmp.update(self.get_comp_desc(comp, desclist))
             features.append(tmp)
         df_feature = pd.DataFrame(features)
         return df_feature
-

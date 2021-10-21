@@ -6,6 +6,7 @@ import os
 import shutil
 import pandas as pd
 
+
 class Datasets:
 
     datapath = "datasets/"
@@ -17,29 +18,23 @@ class Datasets:
     def info(self):
         print("Database is '"+self.dbname+"("+self.dtype+")'")
 
-    def setSigFig(val):
-        try:
-            return '{:.3g}'.format(float(val))
-        except:
-            return val
-
     def starrydata_download(self):
         base_url = "https://github.com"
         file_url = base_url + "/starrydata/starrydata_datasets/tree/master/datasets"
         html = urllib.request.urlopen(file_url)
         soup = BeautifulSoup(html, "html.parser")
         datalist = []
-        for a in soup.findAll("a",attrs={"class":"Link--primary"}):
+        for a in soup.findAll("a", attrs={"class": "Link--primary"}):
             datalist.append(a["href"])
-        zippath = base_url + sorted([dl for dl in datalist if ".zip" in dl],reverse=True)[0]
-        zippath = zippath.replace("/blob/","/raw/")
+        zippath = base_url + sorted([dl for dl in datalist if ".zip" in dl], reverse=True)[0]
+        zippath = zippath.replace("/blob/", "/raw/")
         print(self.datapath)
 
-        if os.path.exists(self.datapath+self.dtype+"_starrydata.csv") == False:
-            if os.path.exists(self.datapath) == False:
+        if not os.path.exists(self.datapath+self.dtype+"_starrydata.csv"):
+            if not os.path.exists(self.datapath):
                 os.mkdir(self.datapath)
             save_path = self.datapath + "download.zip"
-            
+
             print("download " + zippath)
             try:
                 with urllib.request.urlopen(zippath) as download_file:
@@ -48,10 +43,10 @@ class Datasets:
                         save_file.write(data)
             except urllib.error.URLError as e:
                 print(e)
-            
+
             with zipfile.ZipFile(self.datapath + "download.zip") as obj_zip:
                 obj_zip.extractall(self.datapath)
-            
+
             dirname = zippath.split("/")[-1].split(".")[0]
             if self.dtype == "interpolated":
                 shutil.copyfile(self.datapath+dirname+"/"+dirname+"_interpolated_data.csv", self.datapath+self.dtype+"_starrydata.csv")
@@ -61,8 +56,7 @@ class Datasets:
             os.remove(self.datapath + "download.zip")
         print("finished: " + self.datapath+self.dtype+"_starrydata.csv")
 
-
-    def getAlldata(self):
+    def get_alldata(self):
         if self.dbname == "starrydata":
             self.starrydata_download()
             try:
@@ -72,5 +66,5 @@ class Datasets:
 
         return df_data
 
-    def getDense(self, df, columns=[]):
-        return  df[columns].dropna().reset_index(drop=True)
+    def get_dense(self, df, columns=[]):
+        return df[columns].dropna().reset_index(drop=True)
