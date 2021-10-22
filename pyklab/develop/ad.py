@@ -8,6 +8,7 @@ from pycaret import regression
 import pickle
 import os
 import matplotlib.pyplot as plt
+from tqdm.notebook import tqdm
 
 plt.rcParams['font.size'] = 11
 plt.rcParams['font.family']= 'sans-serif'
@@ -34,6 +35,7 @@ class AD:
     ad_dirpath = "adparams/"
     image_dirpath = "images/"
     error_dirpath = "errors/"
+    model_dirpath = "models/"
 
     def get_threshold(self, df, k=5):
         if not os.path.exists(self.ad_dirpath+"nn_train.pickle") and not os.path.exists(self.ad_dirpath+"th_train.pickle"):
@@ -68,6 +70,15 @@ class AD:
     def count_AD(self, nn, df, thlist):
         dists = nn.kneighbors(df, return_distance=True)[0]
         return (dists <= thlist).sum(axis=1)
+
+    def create_ad_starrydata_models(self, targets, df_train, inputsize):
+        for target in tqdm(targets):
+            train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
+            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)#,transformation=True,transform_target=True
+            selected_model = regression.create_model('rf', verbose=False)
+            if not os.path.exists(self.model_dirpath):
+                os.mkdir(self.model_dirpath)
+            regression.save_model(selected_model, model_name = self.model_dirpath + 'model_' + target.replace(" ", "_"))
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
