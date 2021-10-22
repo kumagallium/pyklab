@@ -14,3 +14,9 @@ class Preprocess:
             return response
         except:
             return np.nan
+
+    def getyear(self, published):
+        if type(published) == str:
+            return int(published.split("-")[0])
+        else:
+            return np.nan 
