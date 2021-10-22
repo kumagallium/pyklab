@@ -54,12 +54,14 @@ class AD:
             mint = ti[ti > 0].min()
             ti = ti.fillna(mint).values
 
+            # REFACTOR: need to consider file extensions
             with open(self.ad_dirpath+'nn_train.pickle', 'wb') as f:
                 pickle.dump(neigh, f)
 
             with open(self.ad_dirpath+'th_train.pickle', 'wb') as f:
                 pickle.dump(ti, f)
         else:
+            # REFACTOR: need to consider file extensions
             with open(self.ad_dirpath+'nn_train.pickle', 'rb') as f:
                 neigh = pickle.load(f)
             with open(self.ad_dirpath+'th_train.pickle', 'rb') as f:
@@ -74,11 +76,22 @@ class AD:
     def create_ad_starrydata_models(self, targets, df_train, inputsize):
         for target in tqdm(targets):
             train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
-            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)#,transformation=True,transform_target=True
+            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)# ,transformation=True,transform_target=True
             selected_model = regression.create_model('rf', verbose=False)
             if not os.path.exists(self.model_dirpath):
                 os.mkdir(self.model_dirpath)
             regression.save_model(selected_model, model_name = self.model_dirpath + 'model_' + target.replace(" ", "_"))
+
+    def create_final_model(self, target, df_data, inputsize):
+        df_train_all = df_data.copy()
+        df_train_all = pd.concat([df_data.iloc[:, :inputsize], df_data[[target]]], axis=1)
+        reg_models = regression.setup(df_train_all, target=target[0], session_id=0, silent=True, verbose=False, transform_target=True)# ,transformation=True,transform_target=True
+        selected_model = regression.create_model('rf',verbose=False)
+        pred_model = regression.predict_model(selected_model)
+        if not os.path.exists(self.model_dirpath):
+            os.mkdir(self.model_dirpath)
+        regression.save_model(selected_model,model_name = self.model_dirpath + 'model_alldata_' + target.replace(" ", "_"))
+
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
