@@ -3,6 +3,7 @@ import pymatgen.core as mg
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import r2_score,mean_absolute_error
 from pycaret import regression
 import pickle
 import os
@@ -32,6 +33,7 @@ class AD:
 
     ad_dirpath = "adparams/"
     image_dirpath = "images/"
+    error_dirpath = "errors/"
 
     def get_threshold(self, df, k=5):
         if not os.path.exists(self.ad_dirpath+"nn_train.pickle") and not os.path.exists(self.ad_dirpath+"th_train.pickle"):
@@ -63,68 +65,57 @@ class AD:
 
         return neigh, ti
 
-    def cntAD(self, nn, df, thlist):
+    def count_AD(self, nn, df, thlist):
         dists = nn.kneighbors(df, return_distance=True)[0]
         return (dists <= thlist).sum(axis=1)
 
-    def save_parityplot_ad_starrydata(self, target, ad_reliability, pred_inAD, true_inAD, pred_outAD, true_outAD):
-        if not os.path.exists(self.image_dirpath):
-            os.mkdir(self.image_dirpath)
-        fig = plt.figure(figsize=(3, 3), dpi=300, facecolor='w', edgecolor='k')
-        ax = fig.add_subplot(1, 1, 1)
-        ax.xaxis.set_ticks_position('both')
-        ax.yaxis.set_ticks_position('both')
-        if target == "Z":
-            ax.set_xlabel("Experimental $zT$")
-            ax.set_ylabel("Predicted $zT$")
-            t_min = 5
-            t_max = -2
-            ax.set_xlim(0,1.5)
-            ax.set_ylim(0,1.5)
-        else:
+    def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
+        for idx, tg in enumerate(targets):
+            test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
+            test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[[tg]]], axis=1)
+            selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
+            if tg == "Z":
+                pred_model = regression.predict_model(selected_model, data=test_inAD)
+                pred_model["Label"] = pred_model["Label"] * pred_model["Temperature"] * 10**-3
+                predAD = pred_model["Label"].values
+                trueAD =pred_model.loc[:, tg].values
+            else:
+                pred_model = regression.predict_model(selected_model, data=test_inAD)
+                predAD = pred_model["Label"].values
+                trueAD =pred_model.loc[:, tg].values
 
-            if target == "Thermal conductivity":
-                ax.set_xlabel("Experimental $\u03BA$ [Wm$^{-1}$K$^{-1}$]")
-                ax.set_ylabel("Predicted  $\u03BA$ [Wm$^{-1}$K$^{-1}$]")
-                ax.set_xlim(0, 7)
-                ax.set_ylim(0, 7)
-            elif target == "Seebeck coefficient":
-                ax.set_xlabel("Experimental $S$ [\u03BCVK$^{-1}$]")
-                ax.set_ylabel("Predicted $S$ [\u03BCVK$^{-1}$]")
-                ax.set_xlim(0, 500)
-                ax.set_ylim(0, 500)
-            elif target == "Electrical conductivity":
-                true_inAD = true_inAD/1000000
-                pred_inAD = pred_inAD/1000000
-                true_outAD = true_outAD/1000000
-                pred_outAD = pred_outAD/1000000
-                ax.set_xlabel("Experimental $\u03C3$ [10$^{6}$\u03A9$^{-1}$m$^{-1}$]")
-                ax.set_ylabel("Predicted  $\u03C3$ [10$^{6}$\u03A9$^{-1}$m$^{-1}$]")
-                ax.set_xlim(0, 0.6)
-                ax.set_ylim(0, 0.6)
-            t_min = 0#trueAD.min()
-            t_max = true_inAD.max()
-        mape = (np.sum(np.abs(pred_outAD - true_outAD) / true_outAD) / len(true_outAD))
-        ax.plot([t_min-mape, t_max+mape*2], [t_min-mape, t_max+mape*2], alpha=0.1, lw=1, c = "k")
+            r2list = []
+            rmslelist = []
+            mapelist = []
+            for i in range(int(ad_reliability.max()/tick)+1):
+                relfil = (ad_reliability >= ((tick*(i))))
+                if sum(relfil) > 0:
+                    r2 = r2_score(trueAD[relfil], predAD[relfil])
+                    rmsle = np.sqrt(np.sum((np.log(predAD[relfil]+1)-np.log(trueAD[relfil]+1))**2)/len(trueAD[relfil]))
+                    mape = (np.sum(np.abs(predAD[relfil]-trueAD[relfil])/trueAD[relfil])/len(trueAD[relfil]))*100
+                    r2list.append(r2)
+                    rmslelist.append(rmsle)
+                    mapelist.append(mape)
 
-        true_inAD_viz = np.array([true_inAD.max()+100])
-        true_inAD_viz = np.append(true_inAD_viz, true_inAD)
-        pred_inAD_viz = np.array([pred_inAD.max()+100])
-        pred_inAD_viz = np.append(pred_inAD_viz, pred_inAD)
-        ad_reliability_viz = np.array([1])
-        ad_reliability_viz_tmp = ad_reliability.copy()
-        ad_reliability_viz_tmp = (ad_reliability_viz_tmp-ad_reliability_viz_tmp.min())/(ad_reliability_viz_tmp.max()-ad_reliability_viz_tmp.min())
-        ad_reliability_viz = np.append(ad_reliability_viz, ad_reliability_viz_tmp)
-        np.place(ad_reliability_viz, ad_reliability_viz == 0, ad_reliability_viz.min())
-        ax.scatter(true_inAD_viz, pred_inAD_viz, s=10, c="r", alpha=ad_reliability_viz, lw=0, label="Inside AD")
-        ax.scatter(true_outAD, pred_outAD, s=10, c="b", alpha=0.8, lw=0, marker="^", label="Outside AD")
+            if not os.path.exists(self.error_dirpath):
+                os.mkdir(self.error_dirpath)
 
-        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+            if tg == "Z":
+                with open(self.error_dirpath+'mapelist_'+tg+'T.pickle', 'wb') as f:
+                    pickle.dump(mapelist, f)
+                with open(self.error_dirpath+'rmslelist_'+tg+'T.pickle', 'wb') as f:
+                    pickle.dump(rmslelist, f)
+                with open(self.error_dirpath+'r2list_'+tg+'T.pickle', 'wb') as f:
+                    pickle.dump(r2list, f)
+            else:
+                with open(self.error_dirpath+'mapelist_'+tg.replace(" ", "_")+'.pickle', 'wb') as f:
+                    pickle.dump(mapelist, f)
+                with open(self.error_dirpath+'rmslelist_'+tg.replace(" ", "_")+'.pickle', 'wb') as f:
+                    pickle.dump(rmslelist, f)
+                with open(self.error_dirpath+'r2list_'+tg.replace(" ", "_")+'.pickle', 'wb') as f:
+                    pickle.dump(r2list, f)
 
-        plt.tight_layout()
-        fig.savefig(self.image_dirpath+target.replace(" ", "_")+".png")
-
-    def save_parityplot_ad_starrydata_all(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize):
+    def save_parityplot_ad_starrydata_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize):
         fig = plt.figure(figsize=(6, 6), dpi=300, facecolor='w', edgecolor='k')
         for idx, tg in enumerate(targets):
             test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
