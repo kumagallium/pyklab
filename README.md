@@ -14,7 +14,8 @@ Set up an environment with a directory tree structure like the following.
 ```
 !conda config --add channels conda-forge
 !conda config --add channels anaconda
-!conda install -y beautifulsoup4 ipywidgets git nodejs
+!conda config --add channels bokeh
+!conda install -y beautifulsoup4 ipywidgets git nodejs bokeh
 !pip install pycaret pymatgen
 !jupyter labextension install @jupyter-widgets/jupyterlab-manager
 ```

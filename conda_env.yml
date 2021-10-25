@@ -1,5 +1,6 @@
 name: pyklab
 channels:
+  - bokeh
   - anaconda
   - conda-forge
   - defaults
@@ -13,7 +14,9 @@ dependencies:
   - backports=1.0
   - backports.functools_lru_cache=1.6.4
   - beautifulsoup4=4.9.3
+  - blas=1.0
   - bleach=4.1.0
+  - bokeh=2.4.1
   - bzip2=1.0.8
   - c-ares=1.17.2
   - ca-certificates=2020.10.14
@@ -24,17 +27,20 @@ dependencies:
   - defusedxml=0.7.1
   - entrypoints=0.3
   - expat=2.4.1
+  - freetype=2.10.4
   - gettext=0.19.8.1
   - git=2.33.1
   - icu=68.1
   - importlib-metadata=4.8.1
   - importlib_metadata=4.8.1
+  - intel-openmp=2020.2
   - ipykernel=6.4.0
   - ipython=7.28.0
   - ipython_genutils=0.2.0
   - ipywidgets=7.5.1
   - jedi=0.18.0
   - jinja2=3.0.2
+  - jpeg=9b
   - json5=0.9.5
   - jsonschema=4.1.0
   - jupyter_client=7.0.6
@@ -43,6 +49,7 @@ dependencies:
   - jupyterlab_pygments=0.1.2
   - jupyterlab_server=1.0.9
   - krb5=1.19.2
+  - lcms2=2.11
   - libcurl=7.79.1
   - libcxx=12.0.1
   - libedit=3.1.20191231
@@ -50,13 +57,20 @@ dependencies:
   - libffi=3.4.2
   - libiconv=1.16
   - libnghttp2=1.43.0
+  - libpng=1.6.37
   - libsodium=1.0.18
   - libssh2=1.10.0
+  - libtiff=4.1.0
   - libuv=1.42.0
   - libzlib=1.2.11
+  - lz4-c=1.9.2
   - markupsafe=2.0.1
   - matplotlib-inline=0.1.3
   - mistune=0.8.4
+  - mkl=2019.4
+  - mkl-service=2.3.0
+  - mkl_fft=1.2.0
+  - mkl_random=1.1.1
   - nbclient=0.5.4
   - nbconvert=6.2.0
   - nbformat=5.1.3
@@ -64,6 +78,8 @@ dependencies:
   - nest-asyncio=1.5.1
   - nodejs=10.13.0
   - notebook=6.4.4
+  - numpy-base=1.19.1
+  - olefile=0.46
   - openssl=3.0.0
   - packaging=21.0
   - pandoc=2.14.2
@@ -102,9 +118,11 @@ dependencies:
   - wheel=0.37.0
   - widgetsnbextension=3.5.1
   - xz=5.2.5
+  - yaml=0.2.5
   - zeromq=4.3.4
   - zipp=3.6.0
   - zlib=1.2.11
+  - zstd=1.4.4
   - pip:
     - alembic==1.4.1
     - blis==0.7.4
