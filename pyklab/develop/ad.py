@@ -193,18 +193,40 @@ class AD:
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
-            test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
-            test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[[tg]]], axis=1)
-            selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
             if tg == "Z":
+                test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
+                test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[[tg]]], axis=1)
+                selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
                 pred_model = regression.predict_model(selected_model, data=test_inAD)
                 pred_model["Label"] = pred_model["Label"] * pred_model["Temperature"] * 10**-3
                 predAD = pred_model["Label"].values
-                trueAD =pred_model.loc[:, tg].values
+                trueAD =pred_model.loc[:, tg].values * pred_model["Temperature"] * 10**-3
+            elif tg == "Zcalc":
+                test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
+                selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
+                pred_model_S = regression.predict_model(selected_model_S, data=test_inAD_S)
+                predAD_S = pred_model_S["Label"].values
+
+                test_inAD_El = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Electrical conductivity"]]], axis=1)
+                selected_model_El = regression.load_model('models/model_Electrical_conductivity')
+                pred_model_El = regression.predict_model(selected_model_El, data=test_inAD_El)
+                predAD_El = pred_model_El["Label"].values
+
+                test_inAD_k = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Thermal conductivity"]]], axis=1)
+                selected_model_k = regression.load_model('models/model_Thermal_conductivity')
+                pred_model_k = regression.predict_model(selected_model_k, data=test_inAD_k)
+                predAD_k = pred_model_k["Label"].values
+
+                predAD = (((predAD_S*10**-6)**2)*(predAD_El)/predAD_k) * df_test_inAD["Temperature"]
+                trueAD = df_test_inAD.loc[:, "Z"].values * df_test_inAD["Temperature"] * 10**-3
+
             else:
+                test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
+                test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[[tg]]], axis=1)
+                selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
                 pred_model = regression.predict_model(selected_model, data=test_inAD)
                 predAD = pred_model["Label"].values
-                trueAD =pred_model.loc[:, tg].values
+                trueAD =df_test_inAD.loc[:, tg].values
 
             r2list = []
             rmslelist = []
@@ -229,6 +251,14 @@ class AD:
                     pickle.dump(rmslelist, f)
                 with open(self.error_dirpath+'r2list_'+tg+'T.pickle', 'wb') as f:
                     pickle.dump(r2list, f)
+            elif tg == "Zcalc":
+                tg = tg.replace("calc", "")
+                with open(self.error_dirpath+'mapelist_'+tg+'Tcalc.pickle', 'wb') as f:
+                    pickle.dump(mapelist, f)
+                with open(self.error_dirpath+'rmslelist_'+tg+'Tcalc.pickle', 'wb') as f:
+                    pickle.dump(rmslelist, f)
+                with open(self.error_dirpath+'r2list_'+tg+'Tcalc.pickle', 'wb') as f:
+                    pickle.dump(r2list, f)
             else:
                 with open(self.error_dirpath+'mapelist_'+tg.replace(" ", "_")+'.pickle', 'wb') as f:
                     pickle.dump(mapelist, f)
@@ -240,13 +270,13 @@ class AD:
     def save_parityplot_ad_starrydata_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize):
         fig = plt.figure(figsize=(6, 6), dpi=300, facecolor='w', edgecolor='k')
         for idx, tg in enumerate(targets):
-            test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
-            test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
             ax = fig.add_subplot(2, 2, idx+1)
             ax.xaxis.set_ticks_position('both')
             ax.yaxis.set_ticks_position('both')
-            selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
             if tg == "Z":
+                test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
+                test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
+                selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
                 pred_model = regression.predict_model(selected_model, data=test_inAD)
                 pred_model["Label"] = pred_model["Label"] * pred_model["Temperature"] * 10**-3
                 predAD = pred_model["Label"].values
@@ -255,7 +285,7 @@ class AD:
                 pred_model_out = regression.predict_model(selected_model, data=test_outAD)
                 pred_model_out["Label"] = pred_model_out["Label"] * pred_model_out["Temperature"] * 10**-3
                 predAD_out = pred_model_out["Label"].values
-                trueAD_out =pred_model_out.loc[:, tg].values
+                trueAD_out =df_test_outAD.loc[:, tg].values
 
                 ax.set_xlabel("Experimental $zT$")
                 ax.set_ylabel("Predicted $zT$")
@@ -263,10 +293,50 @@ class AD:
                 t_max = -2
                 ax.set_xlim(0, 1.5)
                 ax.set_ylim(0, 1.5)
+            elif tg == "Zcalc":
+                test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
+                test_outAD_S = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Seebeck coefficient"]]], axis=1)
+                selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
+                pred_model_S = regression.predict_model(selected_model_S, data=test_inAD_S)
+                predAD_S = pred_model_S["Label"].values
+                pred_model_out_S = regression.predict_model(selected_model_S, data=test_outAD_S)
+                predAD_out_S = pred_model_out_S["Label"].values
+
+                test_inAD_El = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Electrical conductivity"]]], axis=1)
+                test_outAD_El = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Electrical conductivity"]]], axis=1)
+                selected_model_El = regression.load_model('models/model_Electrical_conductivity')
+                pred_model_El = regression.predict_model(selected_model_El, data=test_inAD_El)
+                predAD_El = pred_model_El["Label"].values
+                pred_model_out_El = regression.predict_model(selected_model_El, data=test_outAD_El)
+                predAD_out_El = pred_model_out_El["Label"].values
+
+                test_inAD_k = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Thermal conductivity"]]], axis=1)
+                test_outAD_k = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Thermal conductivity"]]], axis=1)
+                selected_model_k = regression.load_model('models/model_Thermal_conductivity')
+                pred_model_k = regression.predict_model(selected_model_k, data=test_inAD_k)
+                predAD_k = pred_model_k["Label"].values
+                pred_model_out_k = regression.predict_model(selected_model_k, data=test_outAD_k)
+                predAD_out_k = pred_model_out_k["Label"].values
+
+                predAD = (((predAD_S*10**-6)**2)*(predAD_El)/predAD_k) * df_test_inAD["Temperature"]
+                trueAD = df_test_inAD.loc[:, "Z"].values * df_test_inAD["Temperature"] * 10**-3
+
+                predAD_out = (((predAD_out_S*10**-6)**2)*(predAD_out_El)/predAD_out_k) * df_test_outAD["Temperature"]
+                trueAD_out =df_test_outAD.loc[:, "Z"].values * df_test_outAD["Temperature"] * 10**-3
+
+                ax.set_xlabel("Experimental $zT_{ \mathrm{calc}}$")
+                ax.set_ylabel("Predicted $zT_{ \mathrm{calc}}$")
+                t_min = 5
+                t_max = -2
+                ax.set_xlim(0, 1.5)
+                ax.set_ylim(0, 1.5)
             else:
+                test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
+                test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
+                selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
                 pred_model = regression.predict_model(selected_model, data=test_inAD)
                 predAD = pred_model["Label"].values
-                trueAD =pred_model.loc[:, tg].values
+                trueAD =df_test_inAD.loc[:, tg].values
 
                 pred_model_out = regression.predict_model(selected_model, data=test_outAD)
                 predAD_out = pred_model_out["Label"].values
