@@ -7,6 +7,7 @@ from sklearn.metrics import r2_score,mean_absolute_error
 from sklearn import mixture
 from pycaret import regression
 from bokeh.sampledata.periodic_table import elements
+import collections
 import pickle
 import os
 import matplotlib.pyplot as plt
@@ -79,7 +80,7 @@ class AD:
     def create_ad_starrydata_models(self, targets, df_train, inputsize):
         for target in tqdm(targets):
             train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
-            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)# ,transformation=True,transform_target=True
+            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
             selected_model = regression.create_model('rf', verbose=False)
             if not os.path.exists(self.model_dirpath):
                 os.mkdir(self.model_dirpath)
@@ -88,7 +89,7 @@ class AD:
     def create_final_model(self, target, df_data, inputsize):
         df_train_all = df_data.copy()
         df_train_all = pd.concat([df_data.iloc[:, :inputsize], df_data[[target]]], axis=1)
-        reg_models = regression.setup(df_train_all, target=target[0], session_id=0, silent=True, verbose=False, transform_target=True)# ,transformation=True,transform_target=True
+        reg_models = regression.setup(df_train_all, target=target[0], session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
         selected_model = regression.create_model('rf',verbose=False)
         pred_model = regression.predict_model(selected_model)
         if not os.path.exists(self.model_dirpath):
@@ -99,9 +100,13 @@ class AD:
         df_cluster = df_data.copy()
         clusterinputs  = df_cluster.iloc[:,:inputsize].values
         if kind == "BGM":
-            ms = mixture.BayesianGaussianMixture(n_components=clusternum, random_state=random_state, init_params="kmeans", covariance_type=covariance_type) # diag, full,spherical,tied
+            ms = mixture.BayesianGaussianMixture(n_components=clusternum, random_state=random_state, init_params="kmeans", covariance_type=covariance_type)  # diag, full,spherical,tied
             ms.fit(clusterinputs)
             labels = ms.predict(clusterinputs)
+
+        if not os.path.exists(self.model_dirpath):
+            os.mkdir(self.model_dirpath)
+        pickle.dump(ms, open(self.model_dirpath+kind+"model", 'wb'))
 
         df_cluster["cluster"] = labels
         clusters = np.sort(df_cluster["cluster"].unique())
@@ -113,7 +118,7 @@ class AD:
             clustereltmp = [0] * len(clusterelements)
             for comp in clustercomp:
                 for el, frac in mg.Composition(comp).fractional_composition.as_dict().items():
-                    clustereltmp[mg.Element(el).number-1] += 1#frac
+                    clustereltmp[mg.Element(el).number-1] += 1  # frac
             clusterelements["count"] = clustereltmp
             matfamily.append("-".join(clusterelements.sort_values("count", ascending=False)[:3]["symbol"].values))
 
@@ -167,6 +172,24 @@ class AD:
             pickle.dump(sort_matfamily, f)
 
         return matcolor, sort_matfamily
+
+    def get_stack_ad_cluster(self, df_data, ad_reliability, clustermodel, clusters, inputsize, tick=20):
+        matfamlylist = []
+        for i in range(int(ad_reliability.max()/tick)+1):
+            relfil = (ad_reliability >= ((tick*(i))))
+            if sum(relfil) > 0:
+                matfamlylist.append(collections.Counter(clustermodel.predict(df_data[relfil].iloc[:, :inputsize])))
+
+        stack = []
+        for idx, c in enumerate(clusters):
+            stack.append([])
+            for mf in matfamlylist:
+                if c in mf:
+                    stack[idx].append(mf[c])
+                else:
+                    stack[idx].append(0)
+
+        return stack
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
