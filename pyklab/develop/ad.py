@@ -4,7 +4,9 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
 from sklearn.metrics import r2_score,mean_absolute_error
+from sklearn import mixture
 from pycaret import regression
+from bokeh.sampledata.periodic_table import elements
 import pickle
 import os
 import matplotlib.pyplot as plt
@@ -36,6 +38,7 @@ class AD:
     image_dirpath = "images/"
     error_dirpath = "errors/"
     model_dirpath = "models/"
+    other_dirpath = "others/"
 
     def get_threshold(self, df, k=5):
         if not os.path.exists(self.ad_dirpath+"nn_train.pickle") and not os.path.exists(self.ad_dirpath+"th_train.pickle"):
@@ -90,8 +93,80 @@ class AD:
         pred_model = regression.predict_model(selected_model)
         if not os.path.exists(self.model_dirpath):
             os.mkdir(self.model_dirpath)
-        regression.save_model(selected_model,model_name = self.model_dirpath + 'model_alldata_' + target.replace(" ", "_"))
+        regression.save_model(selected_model,model_name = self.model_dirpath + 'model_final_' + target.replace(" ", "_"))
 
+    def get_matfamily_cluster(self, df_data, inputsize, kind="BGM", clusternum=15, covariance_type="tied", random_state=10):
+        df_cluster = df_data.copy()
+        clusterinputs  = df_cluster.iloc[:,:inputsize].values
+        if kind == "BGM":
+            ms = mixture.BayesianGaussianMixture(n_components=clusternum, random_state=random_state, init_params="kmeans", covariance_type=covariance_type) # diag, full,spherical,tied
+            ms.fit(clusterinputs)
+            labels = ms.predict(clusterinputs)
+
+        df_cluster["cluster"] = labels
+        clusters = np.sort(df_cluster["cluster"].unique())
+
+        matfamily = []
+        clusterelements = elements.copy()
+        for c in clusters:
+            clustercomp = df_cluster[df_cluster["cluster"] == c]["composition"].unique()
+            clustereltmp = [0] * len(clusterelements)
+            for comp in clustercomp:
+                for el, frac in mg.Composition(comp).fractional_composition.as_dict().items():
+                    clustereltmp[mg.Element(el).number-1] += 1#frac
+            clusterelements["count"] = clustereltmp
+            matfamily.append("-".join(clusterelements.sort_values("count", ascending=False)[:3]["symbol"].values))
+
+        return clusters, matfamily, df_cluster
+
+    def get_year_cluster_list(self,df_cluster, clusters):
+        years = np.sort(df_cluster["year"].unique())
+        ylist = []
+        for c in range(len(clusters)):
+            ylist.append([])
+            for y in years:
+                ylist[c].append(df_cluster[(df_cluster["year"]<=y)&(df_cluster["cluster"]==c)]["cluster"].count())
+
+        return ylist
+
+    def save_numofdata_years_cluster(self, yclist, matfamily, df_cluster):
+        years = np.sort(df_cluster["year"].unique())
+        fig = plt.figure(figsize=(3.4, 3), dpi=300, facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(1, 1, 1)
+        # ax.set_yscale("log")
+        ax.set_xlabel("Published year")
+        ax.set_ylabel("Number of training data")
+        ax.set_xlim(2001, 2020)
+        # ax.set_ylim(1, 3*10**4)
+        cmap = plt.get_cmap("tab20c").colors
+
+        ax.stackplot(years, np.array(yclist)[df_cluster["cluster"].value_counts().index.values], labels=np.array(matfamily)[df_cluster["cluster"].value_counts().index.values], colors=cmap)
+
+        ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=6.5, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+        plt.xticks([2000 + 5*i for i in range(5)])
+        plt.tight_layout()
+
+        if not os.path.exists(self.image_dirpath):
+            os.mkdir(self.image_dirpath)
+        fig.savefig(self.image_dirpath+"numofdata_years_cluster.png")
+
+    def get_matfamily_matcolor(self, df_cluster, matfamily):
+        matcolor = {}
+        cmap = plt.get_cmap("tab20c").colors
+        for idx, mf in enumerate(np.array(matfamily)[df_cluster["cluster"].value_counts().index.values]):
+            matcolor.update({matfamily.index(mf): list(cmap)[idx]})
+
+        if not os.path.exists(self.other_dirpath):
+            os.mkdir(self.other_dirpath)
+
+        with open(self.other_dirpath+'matcolor', 'wb') as f:
+            pickle.dump(np.array(matfamily)[df_cluster["cluster"].value_counts().index.values], f)
+
+        sort_matfamily = np.array(matfamily)[df_cluster["cluster"].value_counts().index.values]
+        with open(self.other_dirpath+'matfamily', 'wb') as f:
+            pickle.dump(sort_matfamily, f)
+
+        return matcolor, sort_matfamily
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
