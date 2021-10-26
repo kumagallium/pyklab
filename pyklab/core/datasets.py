@@ -5,6 +5,7 @@ import zipfile
 import os
 import shutil
 import pandas as pd
+from matminer.datasets import load_dataset
 
 
 class Datasets:
@@ -16,7 +17,10 @@ class Datasets:
         self.dtype = dtype
 
     def info(self):
-        print("Database is '"+self.dbname+"("+self.dtype+")'")
+        if self.dbname == "starrydata":
+            print("Database is '"+self.dbname+"("+self.dtype+")'")
+        else:
+            print("Database is '"+self.dbname+"'")
 
     def starrydata_download(self):
         base_url = "https://github.com"
@@ -63,6 +67,14 @@ class Datasets:
                 df_data = pd.read_csv(self.datapath+self.dtype+"_starrydata.csv", index_col=0)
             except:
                 df_data = pd.DataFrame([])
+        elif self.dbname == "materials project":
+            if not os.path.exists(self.datapath+"mp_all_20181018.csv"):
+                if not os.path.exists(self.datapath):
+                    os.mkdir(self.datapath)
+                df_data = load_dataset("mp_all_20181018")
+                df_data.to_csv(self.datapath+'mp_all_20181018.csv')
+            else:
+                df_data = pd.read_csv(self.datapath+'mp_all_20181018.csv')
 
         return df_data
 
