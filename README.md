@@ -16,7 +16,7 @@ Set up an environment with a directory tree structure like the following.
 !conda config --add channels anaconda
 !conda config --add channels bokeh
 !conda install -y beautifulsoup4 ipywidgets git nodejs bokeh
-!pip install pycaret pymatgen matminer
+!pip install pycaret pymatgen matminer ipympl
 !pip uninstall -y numpy
 !pip install numpy==1.19.5
 !jupyter labextension install @jupyter-widgets/jupyterlab-manager
