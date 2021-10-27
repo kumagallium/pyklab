@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
+from matplotlib import collections
 import os
 import numpy as np
 import pandas as pd
+from tqdm.notebook import tqdm
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_squared_error, r2_score
 
 class Visualization:
@@ -29,11 +31,13 @@ class Visualization:
         plt.rcParams["legend.framealpha"] = 1
         plt.rcParams["legend.edgecolor"] = 'black'
 
-    def pandas2plot(self, df_data, x, y, c=None, tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, colorbar=False, aspect=False, image_name=""):
+    def pandas2plot(self, df_data, x, y, c=None, kind="scatter", legend=False, tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, xlabel=None, ylabel=None, colorbar=False, aspect=False, image_name=""):
         xmin = df_data[x].min() if xmin is None else xmin
         xmax = df_data[x].max() if xmax is None else xmax
         ymin = df_data[y].min() if ymin is None else ymin
         ymax = df_data[y].max() if ymax is None else ymax
+        xlabel = x if xlabel is None else xlabel
+        ylabel = y if ylabel is None else ylabel
 
         fig = plt.figure(figsize=(3.5, 3), dpi=300, facecolor='w', edgecolor='k')
         ax = fig.add_subplot(1, 1, 1)
@@ -42,9 +46,23 @@ class Visualization:
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         #plots = df_data.plot(kind="scatter", x=x, y=y, c=c, cmap="jet", alpha=0.5, lw=0, ax=ax, colorbar=colorbar)
-        plots = ax.scatter(x=df_data[x], y=df_data[y], c=c, cmap="jet", alpha=0.5, lw=0)
-        ax.set_xlabel(x)
-        ax.set_ylabel(y)
+        if kind == "scatter":
+            plots = ax.scatter(x=df_data[x], y=df_data[y], c=c, cmap="jet", alpha=0.5, lw=0)
+        elif kind == "line":
+            line_kinds = df_data[c].unique()
+            #cmap = plt.get_cmap("jet")
+            lines = []
+            for i, kind in tqdm(enumerate(line_kinds)):
+                if legend is True:
+                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=1, alpha=0.5, label=kind)
+                else:
+                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=1, alpha=0.5, c="red")
+        if legend is True:
+            ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+
+
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
 
         if aspect:
             aspect = (xmax-xmin)/(ymax-ymin)
@@ -96,9 +114,9 @@ class Visualization:
         xmax = data_x.max() if xmax is None else xmax
         ymin = data_y.min() if ymin is None else ymin
         ymax = data_y.max() if ymax is None else ymax
-
         xlabel = x if xlabel is None else xlabel
         ylabel = y if ylabel is None else ylabel
+
         fig = plt.figure(figsize=(3.5, 3), dpi=300, facecolor='w', edgecolor='k')
 
         ax = fig.add_subplot(1, 1, 1)
