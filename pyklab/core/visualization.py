@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import pandas as pd
+from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_squared_error, r2_score
 
 class Visualization:
 
@@ -154,3 +156,30 @@ class Visualization:
             fig.savefig(self.image_dirpath + x.replace(" ", "_") + "_" + y.replace(" ", "_") + "_parityplot.png")
         else:
             fig.savefig(self.image_dirpath + image_name + ".png")
+
+    def show_tree_importances(self,model, columns):
+        display(pd.DataFrame([model.feature_importances_],columns=columns))
+
+        fig = plt.figure(figsize=(4, 2), dpi=300, facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(1, 1, 1)
+        plots = pd.DataFrame([model.feature_importances_],columns=columns).T.sort_values(0, ascending=False).plot(kind="bar",ax=ax, fontsize=5)
+
+        ax.get_legend().remove()
+        plt.tight_layout()
+        plt.show()
+
+    def show_regression_errors(self, df_data,x,y):
+        data_x = df_data[x]
+        data_y = df_data[y]
+        mae = mean_absolute_error(data_x, data_y)
+        mse = mean_squared_error(data_x, data_y)
+        rmse = np.sqrt(mean_squared_error(data_x, data_y))
+        r2 = r2_score(data_x, data_y)
+        mape = np.mean(np.abs((data_y - data_x) / data_x)) * 100
+        rmsle = np.sqrt(np.sum((np.log(data_y+1)-np.log(data_x+1))**2)/len(data_x))
+        errors = {"MAE": mae, "MSE": mse, "RMSE": rmse, "R2": r2, "MAPE": mape, "RMSLE": rmsle}
+        display(pd.DataFrame([errors]))
+
+
+
+
