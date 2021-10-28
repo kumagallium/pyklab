@@ -19,7 +19,7 @@ Set up an environment with a directory tree structure like the following.
 !pip install pycaret pymatgen matminer ipympl
 !pip uninstall -y numpy
 !pip install numpy==1.19.5
-!jupyter labextension install @jupyter-widgets/jupyterlab-manager
+!jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
 ```
 ```
 !git clone https://github.com/kumagallium/pyklab.git
