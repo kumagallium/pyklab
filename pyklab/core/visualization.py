@@ -31,7 +31,7 @@ class Visualization:
         plt.rcParams["legend.framealpha"] = 1
         plt.rcParams["legend.edgecolor"] = 'black'
 
-    def pandas2plot(self, df_data, x, y, c=None, kind="scatter", legend=False, tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, xlabel=None, ylabel=None, colorbar=False, aspect=False, image_name=""):
+    def pandas2plot(self, df_data, x, y, c=None, kind="scatter", legend=False, legend_pos="right", tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, xlabel=None, ylabel=None, colorbar=False, aspect=False, image_name=""):
         xmin = df_data[x].min() if xmin is None else xmin
         xmax = df_data[x].max() if xmax is None else xmax
         ymin = df_data[y].min() if ymin is None else ymin
@@ -58,7 +58,10 @@ class Visualization:
                 else:
                     ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=1, alpha=0.5, c="red")
         if legend is True:
-            ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+            if legend_pos == "left":
+                ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+            else:
+                ax.legend(loc='upper right', bbox_to_anchor=(0.99, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
 
 
         ax.set_xlabel(xlabel)
