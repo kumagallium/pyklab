@@ -10,12 +10,11 @@ from matminer.datasets import load_dataset
 
 class Datasets:
 
-    datapath = "datasets/"
-
-    def __init__(self, dbname="starrydata", dtype="interpolated", filetype="csv"):
+    def __init__(self, dbname="starrydata", dtype="interpolated", filetype="csv", datapath="datasets/"):
         self.dbname = dbname
         self.dtype = dtype
         self.filetype = filetype
+        self.datapath = datapath
 
     def info(self):
         if self.dbname == "starrydata":

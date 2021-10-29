@@ -8,7 +8,8 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_square
 
 class Visualization:
 
-    image_dirpath = "images/"
+    def __init__(self, image_dirpath="images/"):
+        self.image_dirpath = image_dirpath
 
     def plot_init(self):
         plt.rcParams['font.size'] = 11

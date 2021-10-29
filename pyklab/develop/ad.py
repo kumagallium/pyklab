@@ -34,12 +34,13 @@ plt.rcParams["legend.framealpha"] = 1
 plt.rcParams["legend.edgecolor"] = 'black'
 
 class AD:
-
-    ad_dirpath = "adparams/"
-    image_dirpath = "images/"
-    error_dirpath = "errors/"
-    model_dirpath = "models/"
-    other_dirpath = "others/"
+    
+    def __init__(self, ad_dirpath="adparams/", image_dirpath="datasets/", error_dirpath="errors/",model_dirpath="models/", other_dirpath="others/"):
+        self.ad_dirpath = ad_dirpath
+        self.image_dirpath = image_dirpath
+        self.error_dirpath = error_dirpath
+        self.model_dirpath = model_dirpath
+        self.other_dirpath = other_dirpath
 
     def get_threshold(self, df, k=5):
         if not os.path.exists(self.ad_dirpath+"nn_train.pickle") and not os.path.exists(self.ad_dirpath+"th_train.pickle"):
