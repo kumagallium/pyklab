@@ -20,6 +20,7 @@ Set up an environment with a directory tree structure like the following.
 !pip uninstall -y numpy
 !pip install numpy==1.19.5
 !jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
+!jupyter labextension install @jupyterlab/toc
 ```
 ```
 !git clone https://github.com/kumagallium/pyklab.git
