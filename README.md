@@ -18,11 +18,13 @@ Set up an environment with a directory tree structure like the following.
 !conda install -y beautifulsoup4 ipywidgets git nodejs bokeh
 ```
 ```
-!pip install pycaret pymatgen matminer ipympl
+!pip install pymatgen pycaret matminer ipympl
 ```
 ```
 !pip uninstall -y numpy
-!pip install numpy==1.19.5
+!pip install numpy==1.20.1
+```
+```
 !jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
 !jupyter labextension install @jupyterlab/toc
 ```
@@ -41,6 +43,9 @@ Set up an environment with a directory tree structure like the following.
 ※You can also use the Anaconda prompt to do the installation, but here we show you how to do it without seeing the black command screen.
 
 ※For detailed usage of jupyterlab, please see other sites.
+
+※If you are a windows user, you may need to install "Microsoft C++ Build Tools". In that case, please install it from the following URL.
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
 <br><br>
 
 ### <b>○ CLI</b>
