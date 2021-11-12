@@ -26,7 +26,7 @@ Set up an environment with a directory tree structure like the following.
 ```
 ```
 !jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
-!jupyter labextension install @jupyterlab/toc
+!jupyter labextension install @jupyterlab/toc jupyterlab-plotly
 ```
 ```
 !git clone https://github.com/kumagallium/pyklab.git
