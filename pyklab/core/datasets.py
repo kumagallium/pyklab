@@ -92,6 +92,15 @@ class Datasets:
                     df_data.to_csv(self.datapath+'mp_all_20181018.csv')
                 else:
                     df_data = pd.read_csv(self.datapath+'mp_all_20181018.csv')
+            elif self.filetype == "pkl":
+                if not os.path.exists(self.datapath+"mp_all_20181018.pkl"):
+                    if not os.path.exists(self.datapath):
+                        os.mkdir(self.datapath)
+                    df_data = load_dataset("mp_all_20181018")
+                    df_data.to_pickle(self.datapath+'mp_all_20181018.pkl')
+                else:
+                    df_data = pd.read_pickle(self.datapath+'mp_all_20181018.pkl')
+
 
         return df_data
 
