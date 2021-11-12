@@ -1,21 +1,29 @@
 import pandas as pd
 import numpy as np
-from pymatgen import MPRester
 import plotly.graph_objects as go
 from scipy.spatial import Delaunay
+import pymatgen as mg
+from pymatgen import MPRester
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
+from pymatgen.analysis.local_env import IsayevNN, MinimumDistanceNN, CrystalNN, CutOffDictNN, EconNN, JmolNN, MinimumOKeeffeNN, MinimumVIRENN, VoronoiNN
 import itertools
 from bokeh.sampledata.periodic_table import elements
-import pymatgen as mg
+import networkx as nx
+import matplotlib.pyplot as plt
+
+pmg = MPRester("UP0x1rTAXR52g7pi")
+elcolor = dict(zip(elements["atomic number"].values, elements["CPK"].values))
+
 
 class Structure():
-    def setSigFig(self, val):
+    def set_sig_fig(self, val):
         try:
             return '{:.3g}'.format(float(val))
         except:
             return val
 
-    def getStructure(self, structure_tmp, is_primitive, scale):
+    def get_structure(self, mpid, is_primitive, scale):
+        structure_tmp = pmg.get_structure_by_material_id(mpid)
         sa_structure = SpacegroupAnalyzer(structure_tmp)
         print(sa_structure.get_space_group_symbol())
         if is_primitive:
@@ -26,31 +34,28 @@ class Structure():
         return structure
 
     def get_mpdata_from_composition(self, composition):
-        pmg = MPRester("UP0x1rTAXR52g7pi")
         properties = ["task_id", "pretty_formula", "spacegroup.symbol", "formation_energy_per_atom", "e_above_hull", "band_gap"]
         mpdata = pmg.query(criteria=composition, properties=properties)
         df_mpdata = pd.DataFrame(mpdata)
         df_mpdata = df_mpdata.rename(columns={"task_id": "mpid"})
-        df_mpdata = df_mpdata.applymap(self.setSigFig)
+        df_mpdata = df_mpdata.applymap(self.set_sig_fig)
         df_mpdata = df_mpdata.sort_values("e_above_hull")
 
         return df_mpdata
 
     def get_delaunay_from_mpid(self, mpid="mp-19717", scale=1, is_primitive=False):
-        pmg = MPRester("UP0x1rTAXR52g7pi")
-        structure_tmp = pmg.get_structure_by_material_id(mpid)
-        structure = self.getStructure(structure_tmp, is_primitive, scale)
+        structure = self.get_structure(mpid, is_primitive, scale)
 
-        sites_list = structure.as_dict()["sites"]  # 結晶構造中の各原子の情報
-        sites_list_len = len(sites_list)  # 要素の数
-        atom_cartesian = []  # 各サイトのデカルト座標
-        atom_species = []  # サイトを占有する原子の種類、割合
+        sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
+        sites_list_len = len(sites_list)  # Number of sites
+        atom_cartesian = []  # Cartesian coordinates for each site
+        atom_species = []  # Type and percentage of atoms occupying the site.
 
-        for j in range(sites_list_len):  # 結晶構造中の各原子の情報を取得
-            atom_cartesian.append(sites_list[j]["xyz"])  # デカルト座標
+        for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
+            atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
             atmlabel = sites_list[j]["label"]
-            atom_species.append(atmlabel)  # サイトを占有する原子の種類、割合
-        tri = Delaunay(atom_cartesian)  # ドロネー分割を行う
+            atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+        tri = Delaunay(atom_cartesian)  # Delaunay division
 
         atoms_radius = [mg.Element(el).atomic_radius*10 for el in atom_species]
         atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
@@ -102,3 +107,112 @@ class Structure():
             )
         )
         fig.show()
+
+    def create_crystal_graph(self, structure, graphtype="IsayevNN"):
+        #https://pymatgen.org/pymatgen.analysis.local_env.html
+        #IsayevNN: https://www.nature.com/articles/ncomms15679.pdf
+        if graphtype == "IsayevNN":
+            nn = IsayevNN(cutoff=6, allow_pathological=True)
+        elif graphtype == "MinimumDistanceNN":
+            nn = MinimumDistanceNN(cutoff=5)
+        elif graphtype == "CrystalNN":
+            nn = CrystalNN()
+        elif graphtype == "CutOffDictNN":
+            nn = CutOffDictNN()
+        elif graphtype == "EconNN":
+            nn = EconNN()
+        elif graphtype == "JmolNN":
+            nn = JmolNN()
+        elif graphtype == "MinimumOKeeffeNN":
+            nn = MinimumOKeeffeNN()
+        elif graphtype == "MinimumVIRENN":
+            nn = MinimumVIRENN()
+        elif graphtype == "VoronoiNN":
+            nn = VoronoiNN()
+
+        originalsites = {}
+        originalsites_inv = {}
+        for site in structure.sites:
+            originalsites[site] = nn._get_original_site(structure, site)
+            originalsites_inv[nn._get_original_site(structure, site)] = site
+
+        nodes = {}  # ノードの初期化
+        edges = {}  # エッジの初期化
+        adj = []  # 隣接行列の初期化
+        weights = []  # 重み行列の初期化
+        distances = []  # 原子間距離行列の初期化
+        # 元の各サイト
+        for i, basesite in enumerate(nn.get_all_nn_info(structure)):
+            orisite1 = originalsites_inv[i]
+            nodes[i] = orisite1.as_dict()["species"][0]["element"]
+            sitenum = structure.num_sites   # 元の結晶構造のサイト数
+            adj.append([0]*sitenum)  # 隣接行列の初期化
+            weights.append([0]*sitenum)  # 重み行列の初期化
+            distances.append([0]*sitenum)  # 原子間距離行列の初期化
+            # uniquesite = []
+            # 各隣接サイト
+            for neighbor in basesite:
+                # 隣接サイトと同一の元サイトの探索
+                # for orisite2  in list(originalsites.keys()):
+                for orisite2 in list(originalsites.keys())[i+1:]:
+                    # https://pymatgen.org/pymatgen.core.sites.html
+                    # 同一サイトであるか判定
+                    if neighbor["site"].is_periodic_image(orisite2):
+                        adj[i][originalsites[orisite2]] += 1
+                        weights[i][originalsites[orisite2]] += neighbor["weight"]
+                        distances[i][originalsites[orisite2]] += orisite1.distance(neighbor["site"])
+                        edges.setdefault(i, [])
+                        edges[i].append(originalsites[orisite2])
+                        break
+
+        return nodes, edges, adj, weights, distances
+
+    def view_graph(self, graph, node2atom):
+        g_nodes = [mg.Composition(node).elements[0].symbol for node in graph.nodes]
+        pos = nx.spring_layout(graph)  # ,k=10)
+        if len(graph.edges) > 0:
+            edge_labels = {}
+            u, v, d = np.array(list(graph.edges(data=True))).T
+            sites = list(zip(u, v))
+            for st in sites:
+                edge_labels.setdefault(st, 0)
+                edge_labels[st] += 1
+            nx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_size=5)
+        else:
+            print("No edges")
+
+        nx.draw_networkx(graph, pos, font_size=5, width=0.5, node_color=[elcolor[node2atom[node]] for node in g_nodes],
+                            node_size=[mg.Element(node).atomic_radius*100 for node in g_nodes])
+
+    def visualize_crystal_graph(self, nodes, edges, distances):
+        G = nx.MultiGraph()
+        node2atom = {}
+        atomcount = {}
+        renamenodes = {}
+        for siteidx, el in nodes.items():
+            atomcount.setdefault(el, 0)
+            atomcount[el] += 1
+            renamenodes[siteidx] = el + str(atomcount[el])
+            G.add_node(renamenodes[siteidx])
+            node2atom[el] = mg.Element(el).number
+
+        for siteidx, edge in edges.items():
+            for i, e in enumerate(edge):
+                G.add_edge(renamenodes[siteidx], renamenodes[e], length=distances[siteidx][e])
+
+        fig = plt.figure(figsize=(3, 3), dpi=300, facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(1, 1, 1)
+        # Remove axis ticks
+        ax.tick_params(labelbottom="off", bottom="off")
+        ax.tick_params(labelleft="off", left="off")
+        # Remove labels
+        ax.set_xticklabels([])
+        # Remove axis
+        plt.gca().spines['right'].set_visible(False)
+        plt.gca().spines['left'].set_visible(False)
+        plt.gca().spines['top'].set_visible(False)
+        plt.gca().spines['bottom'].set_visible(False)
+        plt.grid(False)
+
+        self.view_graph(G, node2atom)
+        plt.show()
