@@ -25,7 +25,7 @@ class Structure():
     def get_structure(self, mpid, is_primitive, scale):
         structure_tmp = pmg.get_structure_by_material_id(mpid)
         sa_structure = SpacegroupAnalyzer(structure_tmp)
-        print(sa_structure.get_space_group_symbol())
+        #print(sa_structure.get_space_group_symbol())
         if is_primitive:
             structure = sa_structure.get_primitive_standard_structure()
         else:
@@ -72,10 +72,15 @@ class Structure():
                 ijklist.append((i, j, k))
 
         pts = np.array(tri.points)
-        x, y, z = pts.T
         ijk = np.array(list(set(ijklist)))
-        i, j, k = ijk.T
 
+        return {"pts": pts, "ijk": ijk, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
+
+    def show_delaunay_from_mpid(self, mpid="mp-19717", scale=1, is_primitive=False):
+        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay_from_mpid(mpid=mpid, scale=scale, is_primitive=is_primitive).values()
+
+        x, y, z = pts.T
+        i, j, k = ijk.T
         fig = go.Figure(data=[go.Mesh3d(x=np.array(x), y=np.array(y), z=np.array(z),
                                 color='lightblue',
                                 opacity=0.2,
