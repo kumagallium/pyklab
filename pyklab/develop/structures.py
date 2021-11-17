@@ -27,8 +27,12 @@ class Structure():
         except:
             return val
 
-    def get_structure(self, mpid, is_primitive, scale):
-        structure_tmp = pmg.get_structure_by_material_id(mpid)
+    def get_structure(self, mpid, is_primitive, scale, structure=""):
+        if structure != "":
+            structure_tmp = pmg.get_structure_by_material_id(mpid)
+        else:
+            structure_tmp = structure
+            
         sa_structure = SpacegroupAnalyzer(structure_tmp)
         #print(sa_structure.get_space_group_symbol())
         if is_primitive:
@@ -49,8 +53,7 @@ class Structure():
         return df_mpdata
 
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
-        if structure == "":
-            structure = self.get_structure(mpid, is_primitive, scale)
+        structure = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
         sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
         sites_list_len = len(sites_list)  # Number of sites
