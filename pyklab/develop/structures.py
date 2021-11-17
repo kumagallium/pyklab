@@ -3,7 +3,7 @@ import numpy as np
 import os
 import plotly.graph_objects as go
 from scipy.spatial import Delaunay
-import pymatgen as mg
+import pymatgen.core as mg
 from pymatgen.ext.matproj import MPRester
 from pymatgen.symmetry.analyzer import SpacegroupAnalyzer
 from pymatgen.analysis.local_env import IsayevNN, MinimumDistanceNN, CrystalNN, CutOffDictNN, EconNN, JmolNN, MinimumOKeeffeNN, MinimumVIRENN, VoronoiNN
