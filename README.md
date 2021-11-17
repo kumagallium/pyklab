@@ -37,8 +37,8 @@ Set up an environment with a directory tree structure like the following.
 
 #### 2. If you want to update the library to the latest version, please run the following command on your workspace.
 ```
-!git fetch origin main
-!git reset --hard origin/main
+!git --git-dir=pyklab/.git fetch origin main
+!git --git-dir=pyklab/.git reset --hard origin/main
 ```
 
 ※You can also use the Anaconda prompt to do the installation, but here we show you how to do it without seeing the black command screen.
