@@ -106,6 +106,7 @@ class Structure():
                 zaxis=dict(showgrid=False, showbackground=True, showticklabels=False, title="z")
             )
         )
+        fig.update_scenes(camera_projection=dict(type="orthographic"))
         fig.show()
 
     def create_crystal_graph(self, structure, graphtype="IsayevNN"):
