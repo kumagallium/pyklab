@@ -88,8 +88,11 @@ class Datasets:
                 if not os.path.exists(self.datapath+"mp_all_20181018.csv"):
                     if not os.path.exists(self.datapath):
                         os.mkdir(self.datapath)
+                    print("Downloading data")
                     df_data = load_dataset("mp_all_20181018")
-                    df_data.to_csv(self.datapath+'mp_all_20181018.csv')
+                    print("...")
+                    df_data.to_csv(self.datapath+'mp_all_20181018.csv', index=False)
+                    print("Download completed")
                 else:
                     df_data = pd.read_csv(self.datapath+'mp_all_20181018.csv')
             elif self.filetype == "pkl":
