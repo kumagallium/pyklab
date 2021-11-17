@@ -114,6 +114,21 @@ class Structure():
         fig.update_scenes(camera_projection=dict(type="orthographic"))
         fig.show()
 
+    def get_delaunay_from_mpid_to_offtext(self, mpid="mp-19717", scale=1, is_primitive=False, nodes=False):
+        pts, ijks, atom_species, _, _, _ = self.get_delaunay_from_mpid(mpid=mpid, scale=scale, is_primitive=is_primitive).values()
+
+        offtext = "OFF\n"
+        offtext += str(len(pts)) + " " + str(len(ijks)) + " 0\n"
+        for pt in pts:
+            offtext += " ".join(map(str, pt)) + "\n"
+        for ijk in ijks:
+            offtext += " ".join(map(str, ijk)) + "\n"
+
+        if nodes:
+            offtext += "\n".join(map(str, atom_species))
+
+        return offtext
+
     def create_crystal_graph(self, structure, graphtype="IsayevNN"):
         #https://pymatgen.org/pymatgen.analysis.local_env.html
         #IsayevNN: https://www.nature.com/articles/ncomms15679.pdf
