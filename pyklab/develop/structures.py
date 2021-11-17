@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 import plotly.graph_objects as go
 from scipy.spatial import Delaunay
 import pymatgen as mg
@@ -16,6 +17,10 @@ elcolor = dict(zip(elements["atomic number"].values, elements["CPK"].values))
 
 
 class Structure():
+
+    def __init__(self, structure_dirpath="structures/"):
+        self.structure_dirpath = structure_dirpath
+
     def set_sig_fig(self, val):
         try:
             return '{:.3g}'.format(float(val))
@@ -43,8 +48,9 @@ class Structure():
 
         return df_mpdata
 
-    def get_delaunay_from_mpid(self, mpid="mp-19717", scale=1, is_primitive=False):
-        structure = self.get_structure(mpid, is_primitive, scale)
+    def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
+        if structure == "":
+            structure = self.get_structure(mpid, is_primitive, scale)
 
         sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
         sites_list_len = len(sites_list)  # Number of sites
@@ -57,7 +63,7 @@ class Structure():
             atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
         tri = Delaunay(atom_cartesian)  # Delaunay division
 
-        atoms_radius = [mg.Element(el).atomic_radius*10 for el in atom_species]
+        atoms_radius = [mg.Element(el).atomic_radius*10 if mg.Element(el).atomic_radius != None else 10 for el in atom_species]
         atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
         atom_idx_dict = dict(zip(set(atom_species), range(len(set(atom_species)))))
         atom_idxs = [atom_idx_dict[atmsp] for atmsp in atom_species]
@@ -76,8 +82,8 @@ class Structure():
 
         return {"pts": pts, "ijk": ijk, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
 
-    def show_delaunay_from_mpid(self, mpid="mp-19717", scale=1, is_primitive=False):
-        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay_from_mpid(mpid=mpid, scale=scale, is_primitive=is_primitive).values()
+    def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
+        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure).values()
 
         x, y, z = pts.T
         i, j, k = ijk.T
@@ -114,8 +120,8 @@ class Structure():
         fig.update_scenes(camera_projection=dict(type="orthographic"))
         fig.show()
 
-    def get_delaunay_from_mpid_to_offtext(self, mpid="mp-19717", scale=1, is_primitive=False, nodes=False):
-        pts, ijks, atom_species, _, _, _ = self.get_delaunay_from_mpid(mpid=mpid, scale=scale, is_primitive=is_primitive).values()
+    def get_delaunay_to_offtext(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", nodes=False):
+        pts, ijks, atom_species, _, _, _ = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure).values()
 
         offtext = "OFF\n"
         offtext += str(len(pts)) + " " + str(len(ijks)) + " 0\n"
@@ -126,6 +132,13 @@ class Structure():
 
         if nodes:
             offtext += "\n".join(map(str, atom_species))
+
+        if not os.path.exists(self.structure_dirpath):
+            os.mkdir(self.structure_dirpath)
+        if not os.path.exists(self.structure_dirpath+"mp_delaunay_offformat/"):
+            os.mkdir(self.structure_dirpath+"mp_delaunay_offformat/")
+        with open(self.structure_dirpath+"mp_delaunay_offformat/"+mpid+".off", mode='w') as f:
+            f.write(offtext)
 
         return offtext
 
