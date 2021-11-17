@@ -28,11 +28,11 @@ class Structure():
             return val
 
     def get_structure(self, mpid, is_primitive, scale, structure=""):
-        if structure != "":
+        if structure == "":
             structure_tmp = pmg.get_structure_by_material_id(mpid)
         else:
             structure_tmp = structure
-            
+
         sa_structure = SpacegroupAnalyzer(structure_tmp)
         #print(sa_structure.get_space_group_symbol())
         if is_primitive:
