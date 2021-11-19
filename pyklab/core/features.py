@@ -300,7 +300,7 @@ class Features:
             elif len(composition) == 1:
                 return 0
 
-    def get_comp_desc(self,composition,desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
+    def get_comp_desc(self,composition, func=["ave","var","main_max1min1diff"],desclist=["comp_length","compbase_length","Atomic no","group","row","Mendeleev no","Atomic mass","Atomic radius","X","VEC"]):
         try:
             compdict = self.get_comp_dict(composition=composition)
 
@@ -317,7 +317,12 @@ class Features:
                 desc_tmp.remove("compbase_length")
 
             for desc in desc_tmp:
-                response.update({"ave:"+desc: self.ave(compdict,desc), "var:"+desc: self.var(compdict,desc), "main_max1min1diff:"+desc: self.main_max1min1diff(compdict,desc)})
+                if "ave" in func:
+                    response.update({"ave:"+desc: self.ave(compdict,desc)})
+                if "var" in func:
+                    response.update({ "var:"+desc: self.var(compdict,desc)})
+                if "main_max1min1diff" in func:
+                    response.update({"main_max1min1diff:"+desc: self.main_max1min1diff(compdict,desc)})
 
             return response
         except:
@@ -332,14 +337,19 @@ class Features:
                 desc_tmp.remove("compbase_length")
 
             for desc in desc_tmp:
-                response.update({"ave:"+desc:np.nan,"var:"+desc:np.nan,"main_max1min1diff:"+desc:np.nan})#,"harm:"+feat:np.nan})
+                if "ave" in func:
+                    response.update({"ave:"+desc: np.nan})
+                if "var" in func:
+                    response.update({ "var:"+desc: np.nan})
+                if "main_max1min1diff" in func:
+                    response.update({"main_max1min1diff:"+desc: np.nan})
             return response
 
-    def get_comp_descfeatures(self, complist, desclist=["comp_length", "compbase_length", "Atomic no", "group", "row", "Mendeleev no", "Atomic mass", "Atomic radius", "X", "VEC"]):
+    def get_comp_descfeatures(self, complist, func=["ave","var","main_max1min1diff"], desclist=["comp_length", "compbase_length", "Atomic no", "group", "row", "Mendeleev no", "Atomic mass", "Atomic radius", "X", "VEC"]):
         features = []
         for comp in tqdm(complist):
             tmp = {"composition": comp}
-            tmp.update(self.get_comp_desc(comp, desclist))
+            tmp.update(self.get_comp_desc(comp, func, desclist))
             features.append(tmp)
         df_feature = pd.DataFrame(features)
         return df_feature
