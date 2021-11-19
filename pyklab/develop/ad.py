@@ -13,6 +13,9 @@ import os
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 
+import seaborn as sns
+from matplotlib.patches import Rectangle
+
 plt.rcParams['font.size'] = 11
 plt.rcParams['font.family']= 'sans-serif'
 plt.rcParams['font.sans-serif'] = ['Arial']
@@ -35,7 +38,7 @@ plt.rcParams["legend.edgecolor"] = 'black'
 
 class AD:
     
-    def __init__(self, ad_dirpath="adparams/", image_dirpath="datasets/", error_dirpath="errors/",model_dirpath="models/", other_dirpath="others/"):
+    def __init__(self, ad_dirpath="adparams/", image_dirpath="images/", error_dirpath="errors/",model_dirpath="models/", other_dirpath="others/"):
         self.ad_dirpath = ad_dirpath
         self.image_dirpath = image_dirpath
         self.error_dirpath = error_dirpath
@@ -83,19 +86,21 @@ class AD:
             train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
             reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
             selected_model = regression.create_model('rf', verbose=False)
+            final_model = regression.finalize_model(selected_model)
             if not os.path.exists(self.model_dirpath):
                 os.mkdir(self.model_dirpath)
-            regression.save_model(selected_model, model_name = self.model_dirpath + 'model_' + target.replace(" ", "_"))
+            regression.save_model(final_model, model_name = self.model_dirpath + 'model_' + target.replace(" ", "_"))
 
     def create_final_model(self, target, df_data, inputsize):
         df_train_all = df_data.copy()
         df_train_all = pd.concat([df_data.iloc[:, :inputsize], df_data[[target]]], axis=1)
         reg_models = regression.setup(df_train_all, target=target[0], session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
         selected_model = regression.create_model('rf',verbose=False)
-        pred_model = regression.predict_model(selected_model)
+        #pred_model = regression.predict_model(selected_model)
+        final_model = regression.finalize_model(selected_model)
         if not os.path.exists(self.model_dirpath):
             os.mkdir(self.model_dirpath)
-        regression.save_model(selected_model,model_name = self.model_dirpath + 'model_final_' + target.replace(" ", "_"))
+        regression.save_model(final_model,model_name = self.model_dirpath + 'model_final_' + target.replace(" ", "_"))
 
     def get_matfamily_cluster(self, df_data, inputsize, kind="BGM", clusternum=15, covariance_type="tied", random_state=10):
         df_cluster = df_data.copy()
@@ -384,4 +389,137 @@ class AD:
 
         plt.tight_layout()
         fig.savefig(self.image_dirpath+"TE_parityplot.png")
+
+    def set_matfamily(self, val, matfamily):
+        try:
+            return matfamily[int(val)]
+        except:
+            return np.nan
+
+    def get_properties_tables(self, target, df_decriptor_tmp, nn_train, th_train, cluster_model, matfamily, Tmin=300, Tmax=1300, Ttick=100):
+        df_decriptor = df_decriptor_tmp.iloc[:,1:].copy()
+        table = {}
+        reltable = {}
+        clstable = {}
+        model = regression.load_model('models/model_'+target.replace(" ","_"))
+        for T in tqdm(range(Tmin, Tmax, Ttick)):
+            df_decriptor["Temperature"] = T
+            filterAD = self.count_AD(nn_train, df_decriptor, th_train) > 0
+            if sum(filterAD) > 0:
+                ad_reliability = self.count_AD(nn_train, df_decriptor[filterAD], th_train)
+                new_prediction = regression.predict_model(model, data=df_decriptor[filterAD])
+                if target == "Z":
+                    new_prediction["Label"] = new_prediction["Label"] * (10**-3) * new_prediction["Temperature"]
+                clusterlist = cluster_model.predict(df_decriptor[filterAD])
+                df_test = pd.merge(new_prediction, df_decriptor_tmp, left_index=True, right_index=True).copy()
+
+                idx = 0
+                for comp, value in df_test[["composition", "Label"]].values:
+                    table.setdefault(comp, {})
+                    table[comp][T] = value
+                    reltable.setdefault(comp, {})
+                    reltable[comp][T] = ad_reliability[idx]
+                    clstable.setdefault(comp, {})
+                    clstable[comp][T] = clusterlist[idx]
+                    idx += 1
+        df_clstable_tmp = pd.DataFrame(clstable).T
+
+        df_clstable = df_clstable_tmp.applymap(self.set_matfamily,matfamily=matfamily).copy()
+
+        return pd.DataFrame(table).T, pd.DataFrame(reltable).T, df_clstable
+
+    def get_mape(self, val, mapedlist, tick):
+        try:
+            return mapedlist[int(val / tick)]
+        except:
+            return np.nan
+
+    def get_mape_table(self, target, df_reltable, tick):
+        mapedlist = []
+        with open(self.error_dirpath+'mapelist_'+target.replace(" ", "_")+'.pickle', 'rb') as f:
+            mapedlist=pickle.load(f)
+
+        df_mape = df_reltable.applymap(self.get_mape, mapedlist=mapedlist, tick=tick).copy()
+
+        return df_mape
+
+    def show_ranking_table(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata, rank=20, Tmin=300, Tmax=900, Ttick=100, height=2.5, width=4, imagename="", ascending=False):
+        df_table_max = (df_table + (df_table * (df_mape/100))).copy()
+        df_table_max = df_table_max.applymap(lambda x: '{:.3g}'.format(x))
+        df_table_min = (df_table - (df_table * (df_mape/100))).copy()
+        df_table_min[df_table_min < 0] = 0
+        df_table = df_table[df_table_min > 0]
+        df_table_min = df_table_min.applymap(lambda x: '{:.3g}'.format(x))
+
+        mpcomps = list(df_table.index)
+        dftop = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopval = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftoprel = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopcls = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopmax = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopmin = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        for T in df_table.columns:
+            dftop[T] = list(df_table.sort_values(by=[T], ascending=ascending).index)
+            index = df_table.sort_values(by=[T], ascending=ascending)[T].index
+            dftoprel[T] = list(df_reltable.loc[index, T].values)
+            dftopcls[T] = list(df_clstable.loc[index, T].values)
+            dftopmax[T] = list(df_table_max.loc[index, T].values)
+            dftopmin[T] = list(df_table_min.loc[index, T].values)
+            dftopval[T] = list(df_table.sort_values(by=[T], ascending=ascending)[T].values)
+
+        dftoprel = dftoprel.fillna(0)
+        dftopcls = dftopcls.fillna(0)
+
+        learning_materials = df_leaningdata["composition"].unique()
+
+        dftop.index = dftop.index + 1
+        dftopval.index = dftopval.index + 1
+        dftoprel.index = dftoprel.index + 1
+        dftopcls.index = dftopcls.index + 1
+        dftopmin.index = dftopmin.index + 1
+        dftopmax.index = dftopmax.index + 1
+        dftop = dftop[dftopval > 0]
+
+        plt.rcParams['font.size'] = 4.2
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Arial']
+        plt.rcParams['axes.linewidth'] = 1.2
+        plt.rcParams["axes.grid"] = False
+
+        fig = plt.figure(figsize=(width, height), dpi=400, facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(1, 1, 1)
+        ax.tick_params(pad=1)
+        ax.xaxis.set_ticks_position('top')
+        ax.tick_params(bottom="off", top="off")
+        ax.tick_params(left="off")
+        ax.tick_params(bottom=False,
+                    left=False,
+                    right=False,
+                    top=False)
+
+        temprange = []
+        for T in range(Tmin, Tmax + Ttick, Ttick):
+            temprange.append(str(T)+" K")
+
+        dfstr = "" + dftop + "\n<" + dftopcls.astype(str) + ", " + dftoprel.astype(int).astype(str) + ", " + dftopmin.round(1).astype(str)+"~"+dftopmax.round(1).astype(str) + ">"
+        sns.heatmap(dftopval.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 2.5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval.min().values), vmax=max(dftopval.max().values),yticklabels=1,xticklabels=temprange)
+
+        for i, T in enumerate(tqdm(range(Tmin, Tmax+100, 100))):
+            uniqcomp = []
+            for mat in learning_materials:
+                if len(dftop.loc[:rank, T][dftop.loc[:rank, T] == mat].index) > 0:
+                    if mat not in uniqcomp:
+                        ax.add_patch(Rectangle((i, dftop.loc[:rank, T][dftop.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=False, edgecolor='grey', lw=0.5))
+                        ax.add_patch(Rectangle((i, dftop.loc[:rank, T][dftop.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=True, edgecolor=None, facecolor='grey', alpha=0.8, lw=0))
+                        uniqcomp.append(mat)
+            uniqcomp = []
+
+        plt.tight_layout()  # pad=0.4, w_pad=1, h_pad=1.0)
+
+        if imagename != "":
+            if not os.path.exists(self.image_dirpath):
+                os.mkdir(self.image_dirpath)
+            fig.savefig(self.image_dirpath+imagename+".png")
+
+        plt.show()
 
