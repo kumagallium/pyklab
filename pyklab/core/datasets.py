@@ -70,7 +70,7 @@ class Datasets:
             if self.dtype == "interpolated":
                 shutil.copyfile(self.datapath+dirname+"/"+dirname+"_interpolated_data.csv", self.datapath+self.dtype+"_starrydata_"+version+".csv")
             elif self.dtype == "raw":
-                shutil.copyfile(self.datapath+dirname+"/"+dirname+"raw_data.csv", self.datapath+self.dtype+"_starrydata_"+version+".csv")
+                shutil.copyfile(self.datapath+dirname+"/"+dirname+"_rawdata.csv", self.datapath+self.dtype+"_starrydata_"+version+".csv")
             shutil.rmtree(self.datapath+dirname)
             os.remove(self.datapath + "download.zip")
         print("finished: " + self.datapath+self.dtype+"_starrydata_"+version+".csv")
