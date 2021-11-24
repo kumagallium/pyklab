@@ -131,7 +131,7 @@ class Structure():
         for pt in pts:
             offtext += " ".join(map(str, pt)) + "\n"
         for ijk in ijks:
-            offtext += " ".join(map(str, ijk)) + "\n"
+            offtext += str(len(ijk)) + " " + " ".join(map(str, ijk)) + "\n"
 
         if nodes:
             offtext += "\n".join(map(str, atom_species))
