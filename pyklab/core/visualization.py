@@ -32,7 +32,7 @@ class Visualization:
         plt.rcParams["legend.framealpha"] = 1
         plt.rcParams["legend.edgecolor"] = 'black'
 
-    def pandas2plot(self, df_data, x, y, c=None, kind="scatter", legend=False, legend_pos="right", tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, xlabel=None, ylabel=None, colorbar=False, aspect=False, image_name=""):
+    def pandas2plot(self, df_data, x, y, c=None, alpha=0.5, lw=1, kind="scatter", legend=False, legend_pos="right", tooltip=None, xmin=None, xmax=None, ymin=None, ymax=None, xlabel=None, ylabel=None, colorbar=False, aspect=False, image_name=""):
         xmin = df_data[x].min() if xmin is None else xmin
         xmax = df_data[x].max() if xmax is None else xmax
         ymin = df_data[y].min() if ymin is None else ymin
@@ -46,23 +46,31 @@ class Visualization:
         ax.yaxis.set_ticks_position('both')
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        #plots = df_data.plot(kind="scatter", x=x, y=y, c=c, cmap="jet", alpha=0.5, lw=0, ax=ax, colorbar=colorbar)
+        #plots = df_data.plot(kind="scatter", x=x, y=y, c=c, cmap="jet", alpha=alpha, lw=0, ax=ax, colorbar=colorbar)
         if kind == "scatter":
-            plots = ax.scatter(x=df_data[x], y=df_data[y], c=c, cmap="jet", alpha=0.5, lw=0)
+            plots = ax.scatter(x=df_data[x], y=df_data[y], c=c, cmap="jet", alpha=alpha, lw=0)
         elif kind == "line":
-            line_kinds = df_data[c].unique()
-            #cmap = plt.get_cmap("jet")
-            lines = []
-            for i, kind in tqdm(enumerate(line_kinds)):
-                if legend is True:
-                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=1, alpha=0.5, label=kind)
-                else:
-                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=1, alpha=0.5, c="red")
+            if legend is True:
+                line_kinds = df_data[c].unique()
+                #cmap = plt.get_cmap("jet")
+                lines = []
+                for i, kind in tqdm(enumerate(line_kinds)):
+                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=lw, alpha=alpha, label=kind)
+            else:
+                ax.plot(df_data[x].values, df_data[y].values, lw=lw, alpha=alpha, c="red")
         if legend is True:
             if legend_pos == "left":
-                ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+                if len(df_data[c].unique()) < 8:
+                    ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+                else:
+                    ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=2, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+
             else:
-                ax.legend(loc='upper right', bbox_to_anchor=(0.99, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+                print(df_data[c].unique())
+                if len(df_data[c].unique()) < 8:
+                    ax.legend(loc='upper right', bbox_to_anchor=(0.99, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
+                else:
+                    ax.legend(loc='upper right', bbox_to_anchor=(0.99, 0.99), fontsize=2, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
 
 
         ax.set_xlabel(xlabel)
