@@ -3,7 +3,7 @@ import pymatgen.core as mg
 import numpy as np
 import pandas as pd
 from sklearn.neighbors import NearestNeighbors
-from sklearn.metrics import r2_score,mean_absolute_error
+from sklearn.metrics import r2_score,mean_absolute_error, mean_squared_log_error
 from sklearn import mixture
 from pycaret import regression
 from bokeh.sampledata.periodic_table import elements
@@ -199,7 +199,8 @@ class AD:
 
     def get_errors_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize, tick=20):
         for idx, tg in enumerate(targets):
-            if tg == "Z":
+            if tg == "ZT":
+                tg = "Z"
                 test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
                 test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[[tg]]], axis=1)
                 selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
@@ -207,7 +208,7 @@ class AD:
                 pred_model["Label"] = pred_model["Label"] * pred_model["Temperature"] * 10**-3
                 predAD = pred_model["Label"].values
                 trueAD =pred_model.loc[:, tg].values * pred_model["Temperature"] * 10**-3
-            elif tg == "Zcalc":
+            elif tg == "ZTcalc":
                 test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
                 selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
                 pred_model_S = regression.predict_model(selected_model_S, data=test_inAD_S)
@@ -224,7 +225,20 @@ class AD:
                 predAD_k = pred_model_k["Label"].values
 
                 predAD = (((predAD_S*10**-6)**2)*(predAD_El)/predAD_k) * df_test_inAD["Temperature"]
-                trueAD = df_test_inAD.loc[:, "Z"].values * df_test_inAD["Temperature"] * 10**-3
+                trueAD = df_test_inAD.loc[:, "ZTcalc"].values
+            elif tg == "PFcalc":
+                test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
+                selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
+                pred_model_S = regression.predict_model(selected_model_S, data=test_inAD_S)
+                predAD_S = pred_model_S["Label"].values
+
+                test_inAD_El = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Electrical conductivity"]]], axis=1)
+                selected_model_El = regression.load_model('models/model_Electrical_conductivity')
+                pred_model_El = regression.predict_model(selected_model_El, data=test_inAD_El)
+                predAD_El = pred_model_El["Label"].values
+
+                predAD = ((predAD_S*10**-6)**2)*(predAD_El)*(10**3)
+                trueAD = df_test_inAD.loc[:, "PFcalc"].values#((df_test_inAD.loc[:, "Seebeck coefficient"]*10**-6)**2)*(df_test_inAD.loc[:, "Electrical conductivity"])
 
             else:
                 test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[[tg]]], axis=1)
@@ -241,7 +255,7 @@ class AD:
                 relfil = (ad_reliability >= ((tick*(i))))
                 if sum(relfil) > 0:
                     r2 = r2_score(trueAD[relfil], predAD[relfil])
-                    rmsle = np.sqrt(np.sum((np.log(predAD[relfil]+1)-np.log(trueAD[relfil]+1))**2)/len(trueAD[relfil]))
+                    rmsle = mean_squared_log_error(trueAD[relfil], predAD[relfil])  # np.sqrt(np.sum((np.log(predAD[relfil]+1)-np.log(trueAD[relfil]+1))**2)/len(trueAD[relfil]))
                     mape = (np.sum(np.abs(predAD[relfil]-trueAD[relfil])/trueAD[relfil])/len(trueAD[relfil]))*100
                     r2list.append(r2)
                     rmslelist.append(rmsle)
@@ -257,14 +271,6 @@ class AD:
                     pickle.dump(rmslelist, f)
                 with open(self.error_dirpath+'r2list_'+tg+'T.pickle', 'wb') as f:
                     pickle.dump(r2list, f)
-            elif tg == "Zcalc":
-                tg = tg.replace("calc", "")
-                with open(self.error_dirpath+'mapelist_'+tg+'Tcalc.pickle', 'wb') as f:
-                    pickle.dump(mapelist, f)
-                with open(self.error_dirpath+'rmslelist_'+tg+'Tcalc.pickle', 'wb') as f:
-                    pickle.dump(rmslelist, f)
-                with open(self.error_dirpath+'r2list_'+tg+'Tcalc.pickle', 'wb') as f:
-                    pickle.dump(r2list, f)
             else:
                 with open(self.error_dirpath+'mapelist_'+tg.replace(" ", "_")+'.pickle', 'wb') as f:
                     pickle.dump(mapelist, f)
@@ -279,7 +285,8 @@ class AD:
             ax = fig.add_subplot(2, 2, idx+1)
             ax.xaxis.set_ticks_position('both')
             ax.yaxis.set_ticks_position('both')
-            if tg == "Z":
+            if tg == "ZT":
+                tg = "Z"
                 test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
                 test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
                 selected_model = regression.load_model('models/model_'+tg.replace(" ", "_"))
@@ -299,7 +306,7 @@ class AD:
                 t_max = -2
                 ax.set_xlim(0, 1.5)
                 ax.set_ylim(0, 1.5)
-            elif tg == "Zcalc":
+            elif tg == "ZTcalc":
                 test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
                 test_outAD_S = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Seebeck coefficient"]]], axis=1)
                 selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
@@ -325,10 +332,11 @@ class AD:
                 predAD_out_k = pred_model_out_k["Label"].values
 
                 predAD = (((predAD_S*10**-6)**2)*(predAD_El)/predAD_k) * df_test_inAD["Temperature"]
-                trueAD = df_test_inAD.loc[:, "Z"].values * df_test_inAD["Temperature"] * 10**-3
+                trueAD = df_test_inAD.loc[:, "ZTcalc"].values
 
                 predAD_out = (((predAD_out_S*10**-6)**2)*(predAD_out_El)/predAD_out_k) * df_test_outAD["Temperature"]
-                trueAD_out =df_test_outAD.loc[:, "Z"].values * df_test_outAD["Temperature"] * 10**-3
+                trueAD_out =df_test_outAD.loc[:, "ZTcalc"].values
+                
 
                 ax.set_xlabel("Experimental $zT_{ \mathrm{calc}}$")
                 ax.set_ylabel("Predicted $zT_{ \mathrm{calc}}$")
@@ -336,6 +344,35 @@ class AD:
                 t_max = -2
                 ax.set_xlim(0, 1.5)
                 ax.set_ylim(0, 1.5)
+            elif tg == "PFcalc":
+                test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
+                test_outAD_S = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Seebeck coefficient"]]], axis=1)
+                selected_model_S = regression.load_model('models/model_Seebeck_coefficient')
+                pred_model_S = regression.predict_model(selected_model_S, data=test_inAD_S)
+                predAD_S = pred_model_S["Label"].values
+                pred_model_out_S = regression.predict_model(selected_model_S, data=test_outAD_S)
+                predAD_out_S = pred_model_out_S["Label"].values
+
+                test_inAD_El = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Electrical conductivity"]]], axis=1)
+                test_outAD_El = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Electrical conductivity"]]], axis=1)
+                selected_model_El = regression.load_model('models/model_Electrical_conductivity')
+                pred_model_El = regression.predict_model(selected_model_El, data=test_inAD_El)
+                predAD_El = pred_model_El["Label"].values
+                pred_model_out_El = regression.predict_model(selected_model_El, data=test_outAD_El)
+                predAD_out_El = pred_model_out_El["Label"].values
+
+                predAD =((predAD_S*10**-6)**2)*(predAD_El)*(10**3)
+                trueAD = df_test_inAD.loc[:, "PFcalc"].values
+                #trueAD =((df_test_inAD.loc[:, "Seebeck coefficient"]*10**-6)**2)*(df_test_inAD.loc[:, "Electrical conductivity"])*(10**3)
+
+                predAD_out = ((predAD_out_S*10**-6)**2)*(predAD_out_El)*(10**3)
+                trueAD_out = df_test_outAD.loc[:, "PFcalc"].values
+                #trueAD_out = ((df_test_outAD.loc[:, "Seebeck coefficient"]*10**-6)**2)*(df_test_outAD.loc[:, "Electrical conductivity"])*(10**3)
+
+                ax.set_xlabel("Experimental $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
+                ax.set_ylabel("Predicted $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
+                ax.set_xlim(0, 5)
+                ax.set_ylim(0, 5)
             else:
                 test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
                 test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
@@ -367,6 +404,11 @@ class AD:
                     ax.set_ylabel("Predicted  $\u03C3$ [10$^{6}$\u03A9$^{-1}$m$^{-1}$]")
                     ax.set_xlim(0, 0.6)
                     ax.set_ylim(0, 0.6)
+                elif tg == "PF":
+                    ax.set_xlabel("Experimental $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
+                    ax.set_ylabel("Predicted $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
+                    ax.set_xlim(0, 5)
+                    ax.set_ylim(0, 5)
                 t_min = 0
                 t_max = trueAD.max()
 
@@ -397,31 +439,88 @@ class AD:
             return np.nan
 
     def get_properties_tables(self, target, df_decriptor_tmp, nn_train, th_train, cluster_model, matfamily, Tmin=300, Tmax=1300, Ttick=100):
-        df_decriptor = df_decriptor_tmp.iloc[:,1:].copy()
+        df_decriptor = df_decriptor_tmp.iloc[:,1:].reset_index(drop=True).copy()
         table = {}
         reltable = {}
         clstable = {}
-        model = regression.load_model('models/model_'+target.replace(" ","_"))
-        for T in tqdm(range(Tmin, Tmax, Ttick)):
-            df_decriptor["Temperature"] = T
-            filterAD = self.count_AD(nn_train, df_decriptor, th_train) > 0
-            if sum(filterAD) > 0:
-                ad_reliability = self.count_AD(nn_train, df_decriptor[filterAD], th_train)
-                new_prediction = regression.predict_model(model, data=df_decriptor[filterAD])
-                if target == "Z":
-                    new_prediction["Label"] = new_prediction["Label"] * (10**-3) * new_prediction["Temperature"]
-                clusterlist = cluster_model.predict(df_decriptor[filterAD])
-                df_test = pd.merge(new_prediction, df_decriptor_tmp, left_index=True, right_index=True).copy()
+        if target == "ZTcalc":
+            model_S = regression.load_model('models/model_Seebeck_coefficient')
+            model_k = regression.load_model('models/model_Thermal_conductivity')
+            model_El = regression.load_model('models/model_Electrical_conductivity')
+            for T in tqdm(range(Tmin, Tmax, Ttick)):
+                df_decriptor["Temperature"] = T
+                filterAD = self.count_AD(nn_train, df_decriptor, th_train) > 0
+                if sum(filterAD) > 0:
+                    ad_reliability = self.count_AD(nn_train, df_decriptor[filterAD].reset_index(drop=True), th_train)
+                    new_prediction_S = regression.predict_model(model_S, data=df_decriptor[filterAD].reset_index(drop=True))
+                    new_prediction_El = regression.predict_model(model_El, data=df_decriptor[filterAD].reset_index(drop=True))
+                    new_prediction_k = regression.predict_model(model_k, data=df_decriptor[filterAD].reset_index(drop=True))
+                    new_prediction_S["ZT"] = (((new_prediction_S["Label"]*10**-6)**2)*(new_prediction_El["Label"])/new_prediction_k["Label"]) * new_prediction_S["Temperature"]
+                    clusterlist = cluster_model.predict(df_decriptor[filterAD].reset_index(drop=True))
+                    #df_test = pd.merge(new_prediction_S, df_decriptor_tmp[filterAD].reset_index(drop=True), left_index=True, right_index=True).copy()
+                    new_prediction_S["composition"] = df_decriptor_tmp[filterAD]["composition"].values
 
-                idx = 0
-                for comp, value in df_test[["composition", "Label"]].values:
-                    table.setdefault(comp, {})
-                    table[comp][T] = value
-                    reltable.setdefault(comp, {})
-                    reltable[comp][T] = ad_reliability[idx]
-                    clstable.setdefault(comp, {})
-                    clstable[comp][T] = clusterlist[idx]
-                    idx += 1
+                    idx = 0
+                    for comp, value in new_prediction_S[["composition", "ZT"]].values:
+                        table.setdefault(comp, {})
+                        table[comp][T] = value
+                        reltable.setdefault(comp, {})
+                        reltable[comp][T] = ad_reliability[idx]
+                        clstable.setdefault(comp, {})
+                        clstable[comp][T] = clusterlist[idx]
+                        idx += 1
+        elif target == "PFcalc":
+            model_S = regression.load_model('models/model_Seebeck_coefficient')
+            model_El = regression.load_model('models/model_Electrical_conductivity')
+            for T in tqdm(range(Tmin, Tmax, Ttick)):
+                df_decriptor["Temperature"] = T
+                filterAD = self.count_AD(nn_train, df_decriptor, th_train) > 0
+                if sum(filterAD) > 0:
+                    ad_reliability = self.count_AD(nn_train, df_decriptor[filterAD].reset_index(drop=True), th_train)
+                    new_prediction_S = regression.predict_model(model_S, data=df_decriptor[filterAD].reset_index(drop=True))
+                    new_prediction_El = regression.predict_model(model_El, data=df_decriptor[filterAD].reset_index(drop=True))
+                    new_prediction_S["PF"] = ((new_prediction_S["Label"]*10**-6)**2)*(new_prediction_El["Label"]) * 10**3
+                    clusterlist = cluster_model.predict(df_decriptor[filterAD].reset_index(drop=True))
+                    #df_test = pd.merge(new_prediction_S, df_decriptor_tmp[filterAD].reset_index(drop=True), left_index=True, right_index=True).copy()
+                    new_prediction_S["composition"] = df_decriptor_tmp[filterAD]["composition"].values
+
+                    idx = 0
+                    for comp, value in new_prediction_S[["composition", "PF"]].values:
+                        table.setdefault(comp, {})
+                        table[comp][T] = value
+                        reltable.setdefault(comp, {})
+                        reltable[comp][T] = ad_reliability[idx]
+                        clstable.setdefault(comp, {})
+                        clstable[comp][T] = clusterlist[idx]
+                        idx += 1
+        else:
+            if target == "ZT":
+                model = regression.load_model('models/model_Z')
+            else:
+                model = regression.load_model('models/model_'+target.replace(" ","_"))
+            for T in tqdm(range(Tmin, Tmax, Ttick)):
+                df_decriptor["Temperature"] = T
+                filterAD = self.count_AD(nn_train, df_decriptor, th_train) > 0
+                if sum(filterAD) > 0:
+                    ad_reliability = self.count_AD(nn_train, df_decriptor[filterAD], th_train)
+                    new_prediction = regression.predict_model(model, data=df_decriptor[filterAD].reset_index(drop=True))
+                    if target == "ZT":
+                        new_prediction["Label"] = new_prediction["Label"] * (10**-3) * new_prediction["Temperature"]
+                    elif target == "Electrical conductivity":
+                        new_prediction["Label"] = new_prediction["Label"] * (10**-5)
+                    clusterlist = cluster_model.predict(df_decriptor[filterAD].reset_index(drop=True))
+                    #df_test = pd.merge(new_prediction, df_decriptor_tmp.reset_index(drop=True), left_index=True, right_index=True).copy()
+                    new_prediction["composition"] = df_decriptor_tmp[filterAD]["composition"].values
+
+                    idx = 0
+                    for comp, value in new_prediction[["composition", "Label"]].values:
+                        table.setdefault(comp, {})
+                        table[comp][T] = value
+                        reltable.setdefault(comp, {})
+                        reltable[comp][T] = ad_reliability[idx]
+                        clstable.setdefault(comp, {})
+                        clstable[comp][T] = clusterlist[idx]
+                        idx += 1
         df_clstable_tmp = pd.DataFrame(clstable).T
 
         df_clstable = df_clstable_tmp.applymap(self.set_matfamily,matfamily=matfamily).copy()
@@ -443,7 +542,7 @@ class AD:
 
         return df_mape
 
-    def show_ranking_table(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata, rank=20, Tmin=300, Tmax=900, Ttick=100, height=2.5, width=4, imagename="", ascending=False):
+    def show_ranking_table(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata,filrel=50, rank=20, Tmin=300, Tmax=900, Ttick=100, height=2.5, width=4, imagename="", ascending=False):
         df_table_max = (df_table + (df_table * (df_mape/100))).copy()
         df_table_max = df_table_max.applymap(lambda x: '{:.3g}'.format(x))
         df_table_min = (df_table - (df_table * (df_mape/100))).copy()
@@ -458,7 +557,7 @@ class AD:
         dftopcls = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
         dftopmax = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
         dftopmin = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
-        for T in df_table.columns:
+        for T in range(Tmin, Tmax+Ttick, Ttick):
             dftop[T] = list(df_table.sort_values(by=[T], ascending=ascending).index)
             index = df_table.sort_values(by=[T], ascending=ascending)[T].index
             dftoprel[T] = list(df_reltable.loc[index, T].values)
@@ -470,6 +569,18 @@ class AD:
         dftoprel = dftoprel.fillna(0)
         dftopcls = dftopcls.fillna(0)
 
+        dftop_filrel = dftop[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopval_filrel = dftopval[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopcls_filrel = dftopcls[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftoprel_filrel = dftoprel[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopmax_filrel = dftopmax[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopmin_filrel = dftopmin[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+
+        dftop_filrel = dftop_filrel.fillna("")
+        #dftopval_filrel = dftopval_filrel.fillna(0)
+        dftoprel_filrel = dftoprel_filrel.fillna(0)
+        dftopcls_filrel = dftopcls_filrel.fillna(0)
+
         learning_materials = df_leaningdata["composition"].unique()
 
         dftop.index = dftop.index + 1
@@ -479,6 +590,15 @@ class AD:
         dftopmin.index = dftopmin.index + 1
         dftopmax.index = dftopmax.index + 1
         dftop = dftop[dftopval > 0]
+
+        dftop_filrel.index = dftop_filrel.index + 1
+        dftopval_filrel.index = dftopval_filrel.index + 1
+        dftoprel_filrel.index = dftoprel_filrel.index + 1
+        dftopcls_filrel.index = dftopcls_filrel.index + 1
+        dftopmin_filrel.index = dftopmin_filrel.index + 1
+        dftopmax_filrel.index = dftopmax_filrel.index + 1
+        dftop_filrel = dftop_filrel[dftopval_filrel > 0]
+
 
         plt.rcParams['font.size'] = 4.2
         plt.rcParams['font.family'] = 'sans-serif'
@@ -501,16 +621,16 @@ class AD:
         for T in range(Tmin, Tmax + Ttick, Ttick):
             temprange.append(str(T)+" K")
 
-        dfstr = "" + dftop + "\n<" + dftopcls.astype(str) + ", " + dftoprel.astype(int).astype(str) + ", " + dftopmin.round(1).astype(str)+"~"+dftopmax.round(1).astype(str) + ">"
-        sns.heatmap(dftopval.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 2.5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval.min().values), vmax=max(dftopval.max().values),yticklabels=1,xticklabels=temprange)
+        dfstr = "" + dftop_filrel + "\n<" + dftopcls_filrel.astype(str) + ", " + dftoprel_filrel.astype(int).astype(str) + ", " + dftopmin_filrel.round(1).astype(str)+"~"+dftopmax_filrel.round(1).astype(str) + ">"
+        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 2.5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval_filrel.min().values), vmax=max(dftopval_filrel.max().values),yticklabels=1,xticklabels=temprange)
 
-        for i, T in enumerate(tqdm(range(Tmin, Tmax+100, 100))):
+        for i, T in enumerate(tqdm(range(Tmin, Tmax+Ttick, Ttick))):
             uniqcomp = []
             for mat in learning_materials:
-                if len(dftop.loc[:rank, T][dftop.loc[:rank, T] == mat].index) > 0:
+                if len(dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T] == mat].index) > 0:
                     if mat not in uniqcomp:
-                        ax.add_patch(Rectangle((i, dftop.loc[:rank, T][dftop.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=False, edgecolor='grey', lw=0.5))
-                        ax.add_patch(Rectangle((i, dftop.loc[:rank, T][dftop.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=True, edgecolor=None, facecolor='grey', alpha=0.8, lw=0))
+                        ax.add_patch(Rectangle((i, dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=False, edgecolor='grey', lw=0.5))
+                        ax.add_patch(Rectangle((i, dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=True, edgecolor=None, facecolor='grey', alpha=0.8, lw=0))
                         uniqcomp.append(mat)
             uniqcomp = []
 
