@@ -36,7 +36,10 @@ class Features:
         return VEC
 
     def get_comp_dict(self, composition):
-        return dict(mg.Composition(composition).fractional_composition.get_el_amt_dict())
+        try:
+            return dict(mg.Composition(composition).fractional_composition.get_el_amt_dict())
+        except:
+            return {}
 
     def ave(self, composition, description):
         composition = self.get_comp_dict(composition)
