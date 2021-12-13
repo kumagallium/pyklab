@@ -37,10 +37,32 @@ class Structure():
         #print(sa_structure.get_space_group_symbol())
         if is_primitive:
             structure = sa_structure.get_primitive_standard_structure()
+            structure.make_supercell([scale, scale, scale])
         else:
             structure = sa_structure.get_refined_structure()
             structure.make_supercell([scale, scale, scale])
         return structure
+
+    def get_conventional_sites(self, structure, scale=1, tol=0.01):
+        # （Ref） https://pymatgen.org/pymatgen.symmetry.analyzer.html
+        sa_structure = SpacegroupAnalyzer(structure)
+        conventional_structure = sa_structure.get_refined_structure()
+        a, b, c = conventional_structure.lattice.abc
+
+        conventional_structure.make_supercell(scaling_matrix=[3*scale, 3*scale, 3*scale], to_unit_cell=False)
+        df_c_tmp = conventional_structure.as_dataframe()
+        
+        convert_xyz = []
+        for xyz in df_c_tmp[["x", "y", "z"]].values:
+            # （Ref） https://pymatgen.org/pymatgen.core.lattice.html
+            convert_xyz.append(conventional_structure.lattice.get_vector_along_lattice_directions(xyz))
+
+        df_c = pd.concat([df_c_tmp,pd.DataFrame(convert_xyz,columns=["conv_x", "conv_y", "conv_z"])],axis=1).copy()
+        #df_c = df_c[(df_c["conv_x"]<=(a*scale)+tol) & (df_c["conv_y"]<=(b*scale)+tol) & (df_c["conv_z"]<=(c*scale)+tol)]
+        df_c = df_c[(df_c["conv_x"]<=(2*a*scale)+(tol*a)) & (df_c["conv_y"]<=(2*b*scale)+(tol*b)) & (df_c["conv_z"]<=(2*c*scale)+(tol*c)) & (df_c["conv_x"]>=a-(tol*a)) & (df_c["conv_y"]>=b-(tol*b)) & (df_c["conv_z"]>=c-(tol*c))]
+        df_c["xyz"] = list(zip(df_c["x"].values, df_c["y"].values, df_c["z"].values))
+        df_c["label"] = df_c["Species"]
+        return df_c[["label","xyz"]].to_dict(orient='records')
 
     def get_mpdata_from_composition(self, composition):
         properties = ["task_id", "pretty_formula", "spacegroup.symbol", "formation_energy_per_atom", "e_above_hull", "band_gap"]
@@ -52,21 +74,32 @@ class Structure():
 
         return df_mpdata
 
-    def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
+    def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", is_unitcell=False):
         structure = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
-        sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
-        sites_list_len = len(sites_list)  # Number of sites
-        atom_cartesian = []  # Cartesian coordinates for each site
-        atom_species = []  # Type and percentage of atoms occupying the site.
+        if is_unitcell:
+            sites_list = self.get_conventional_sites(structure, scale)  # Information on each site in the crystal structure
+            sites_list_len = len(sites_list)  # Number of sites
+            atom_cartesian = []  # Cartesian coordinates for each site
+            atom_species = []  # Type and percentage of atoms occupying the site.
 
-        for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
-            atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
-            atmlabel = sites_list[j]["label"]
-            atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+            for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
+                atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
+                atmlabel = sites_list[j]["label"].elements[0].symbol
+                atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+        else:
+            sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
+            sites_list_len = len(sites_list)  # Number of sites
+            atom_cartesian = []  # Cartesian coordinates for each site
+            atom_species = []  # Type and percentage of atoms occupying the site.
+            for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
+                atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
+                atmlabel = sites_list[j]["label"]
+                atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+
         tri = Delaunay(atom_cartesian)  # Delaunay division
 
-        atoms_radius = [mg.Element(el).atomic_radius*10 if mg.Element(el).atomic_radius != None else 10 for el in atom_species]
+        atoms_radius = [mg.Element(el).atomic_radius*(10/scale) if mg.Element(el).atomic_radius != None else (10/scale) for el in atom_species]
         atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
         atom_idx_dict = dict(zip(set(atom_species), range(len(set(atom_species)))))
         atom_idxs = [atom_idx_dict[atmsp] for atmsp in atom_species]
@@ -74,6 +107,7 @@ class Structure():
         ijklist = []
         for tet in tri.simplices:
             for comb in itertools.combinations(tet, 3):
+                comb = np.sort(comb)
                 i = comb[0]
                 j = comb[1]
                 k = comb[2]
@@ -85,20 +119,24 @@ class Structure():
 
         return {"pts": pts, "ijk": ijk, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
 
-    def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
-        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure).values()
+    def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, is_unitcell=False, structure=""):
+        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure, is_unitcell=is_unitcell).values()
 
         x, y, z = pts.T
         i, j, k = ijk.T
+        print(len(pts))
+        print(len(ijk))
         fig = go.Figure(data=[go.Mesh3d(x=np.array(x), y=np.array(y), z=np.array(z),
                                 color='lightblue',
                                 opacity=0.2,
                                         flatshading=True,
                                 contour=dict(show=False),
+                                hoverinfo="text",
                                 i = i,
                                 j = j,
                                 k = k),
                                 go.Scatter3d(x=x, y=y, z=z, mode='markers',
+                                            hoverinfo="text",
                                             hovertext=atom_species,
                                             marker=dict(
                                                     size=atoms_radius,
@@ -123,8 +161,8 @@ class Structure():
         fig.update_scenes(camera_projection=dict(type="orthographic"))
         fig.show()
 
-    def get_delaunay_to_offtext(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", nodes=False):
-        pts, ijks, atom_species, _, _, _ = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure).values()
+    def get_delaunay_to_offformat(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", nodes=False, is_unitcell=False):
+        pts, ijks, atom_species, _, _, _ = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure, is_unitcell=is_unitcell).values()
 
         offtext = "OFF\n"
         offtext += str(len(pts)) + " " + str(len(ijks)) + " 0\n"
@@ -140,10 +178,37 @@ class Structure():
             os.mkdir(self.structure_dirpath)
         if not os.path.exists(self.structure_dirpath+"mp_delaunay_offformat/"):
             os.mkdir(self.structure_dirpath+"mp_delaunay_offformat/")
+        # Refactor: Add naming process when mpid is missing
         with open(self.structure_dirpath+"mp_delaunay_offformat/"+mpid+".off", mode='w') as f:
             f.write(offtext)
 
         return offtext
+
+
+    def get_delaunay_to_objformat(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", is_unitcell=False):
+        pts, ijks, atom_species, _, _, _ = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure, is_unitcell=is_unitcell).values()
+
+        objtext ="####\n#\n# OBJ File Generated by Pyklab\n#\n####\n"+ \
+                 "# Object "+mpid+".obj\n"+ \
+                 "#\n# Vertices: "+str(len(pts))+"\n"+ \
+                 "# Faces: "+str(len(ijks))+"\n#\n####\n"
+        for pt in pts:
+            objtext += "v " + " ".join(map(str, pt)) + "\n"
+        objtext += "\n"
+        for ijk in ijks:
+            ijk = map(lambda x: x+1, ijk)
+            objtext += "f " + " ".join(map(str, ijk)) + "\n"
+        objtext += "\n# End of File"
+
+        if not os.path.exists(self.structure_dirpath):
+            os.mkdir(self.structure_dirpath)
+        if not os.path.exists(self.structure_dirpath+"mp_delaunay_objformat/"):
+            os.mkdir(self.structure_dirpath+"mp_delaunay_objformat/")
+        # Refactor: Add naming process when mpid is missing
+        with open(self.structure_dirpath+"mp_delaunay_objformat/"+mpid+".obj", mode='w') as f:
+            f.write(objtext)
+
+        return objtext
 
     def create_crystal_graph(self, structure, graphtype="IsayevNN"):
         #https://pymatgen.org/pymatgen.analysis.local_env.html
