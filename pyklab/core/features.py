@@ -350,7 +350,7 @@ class Features:
 
     def get_comp_descfeatures(self, complist, func=["ave","var","main_max1min1diff"], desclist=["comp_length", "compbase_length", "Atomic no", "group", "row", "Mendeleev no", "Atomic mass", "Atomic radius", "X", "VEC"]):
         features = []
-        for comp in tqdm(complist):
+        for comp in complist:
             tmp = {"composition": comp}
             tmp.update(self.get_comp_desc(comp, func, desclist))
             features.append(tmp)
