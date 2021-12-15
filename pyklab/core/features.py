@@ -321,12 +321,23 @@ class Features:
 
             for desc in desc_tmp:
                 if "ave" in func:
-                    response.update({"ave:"+desc: self.ave(compdict,desc)})
+                    ave_tmp = self.ave(compdict,desc)
+                    if ave_tmp != "no data":
+                        response.update({"ave:"+desc: ave_tmp})
+                    else:
+                        response.update({"ave:"+desc: np.nan})
                 if "var" in func:
-                    response.update({ "var:"+desc: self.var(compdict,desc)})
+                    var_tmp = self.var(compdict,desc)
+                    if var_tmp != "no data":
+                        response.update({ "var:"+desc: var_tmp})
+                    else:
+                        response.update({"var:"+desc: np.nan})
                 if "main_max1min1diff" in func:
-                    response.update({"main_max1min1diff:"+desc: self.main_max1min1diff(compdict,desc)})
-
+                    diff_tmp = self.main_max1min1diff(compdict,desc)
+                    if diff_tmp != "no data":
+                        response.update({ "main_max1min1diff:"+desc: diff_tmp})
+                    else:
+                        response.update({"main_max1min1diff:"+desc: np.nan})
             return response
         except:
             response = {}
