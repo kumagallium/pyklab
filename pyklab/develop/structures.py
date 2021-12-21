@@ -43,7 +43,7 @@ class Structure():
             structure.make_supercell([scale, scale, scale])
         return structure
 
-    def get_conventional_sites(self, structure, scale=1, tol=0.01):
+    def get_conventional_sites(self, structure, scale=1, tol=0.0):
         # （Ref） https://pymatgen.org/pymatgen.symmetry.analyzer.html
         sa_structure = SpacegroupAnalyzer(structure)
         conventional_structure = sa_structure.get_refined_structure()
@@ -74,11 +74,11 @@ class Structure():
 
         return df_mpdata
 
-    def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", is_unitcell=False):
+    def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", is_unitcell=False, tol=0.0):
         structure = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
         if is_unitcell:
-            sites_list = self.get_conventional_sites(structure, scale)  # Information on each site in the crystal structure
+            sites_list = self.get_conventional_sites(structure, scale, tol=tol)  # Information on each site in the crystal structure
             sites_list_len = len(sites_list)  # Number of sites
             atom_cartesian = []  # Cartesian coordinates for each site
             atom_species = []  # Type and percentage of atoms occupying the site.
@@ -97,7 +97,31 @@ class Structure():
                 atmlabel = sites_list[j]["label"]
                 atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
 
-        tri = Delaunay(atom_cartesian)  # Delaunay division
+        try:
+            tri = Delaunay(atom_cartesian)  # Delaunay division
+        except:
+            if scale == 1:
+                structure = self.get_structure(mpid, is_primitive, 2, structure=structure)
+                if is_unitcell:
+                    sites_list = self.get_conventional_sites(structure, 2, tol=tol)  # Information on each site in the crystal structure
+                    sites_list_len = len(sites_list)  # Number of sites
+                    atom_cartesian = []  # Cartesian coordinates for each site
+                    atom_species = []  # Type and percentage of atoms occupying the site.
+
+                    for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
+                        atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
+                        atmlabel = sites_list[j]["label"].elements[0].symbol
+                        atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+                else:
+                    sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
+                    sites_list_len = len(sites_list)  # Number of sites
+                    atom_cartesian = []  # Cartesian coordinates for each site
+                    atom_species = []  # Type and percentage of atoms occupying the site.
+                    for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
+                        atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
+                        atmlabel = sites_list[j]["label"]
+                        atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
+                tri = Delaunay(atom_cartesian)  # Delaunay division
 
         atoms_radius = [mg.Element(el).atomic_radius*(10/scale) if mg.Element(el).atomic_radius != None else (10/scale) for el in atom_species]
         atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
@@ -119,8 +143,8 @@ class Structure():
 
         return {"pts": pts, "ijk": ijk, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
 
-    def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, is_unitcell=False, structure=""):
-        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure, is_unitcell=is_unitcell).values()
+    def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, is_unitcell=False, structure="", tol=0.0):
+        pts, ijk, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure, is_unitcell=is_unitcell,tol=tol).values()
 
         x, y, z = pts.T
         i, j, k = ijk.T
