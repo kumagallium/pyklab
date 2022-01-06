@@ -75,10 +75,10 @@ class Structure():
         return df_mpdata
 
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure="", is_unitcell=False, tol=0.0):
-        structure = self.get_structure(mpid, is_primitive, scale, structure=structure)
+        structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
         if is_unitcell:
-            sites_list = self.get_conventional_sites(structure, scale, tol=tol)  # Information on each site in the crystal structure
+            sites_list = self.get_conventional_sites(structure_tmp, scale, tol=tol)  # Information on each site in the crystal structure
             sites_list_len = len(sites_list)  # Number of sites
             atom_cartesian = []  # Cartesian coordinates for each site
             atom_species = []  # Type and percentage of atoms occupying the site.
@@ -88,7 +88,7 @@ class Structure():
                 atmlabel = sites_list[j]["label"].elements[0].symbol
                 atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
         else:
-            sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
+            sites_list = structure_tmp.as_dict()["sites"]  # Information on each site in the crystal structure
             sites_list_len = len(sites_list)  # Number of sites
             atom_cartesian = []  # Cartesian coordinates for each site
             atom_species = []  # Type and percentage of atoms occupying the site.
@@ -97,31 +97,7 @@ class Structure():
                 atmlabel = sites_list[j]["label"]
                 atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
 
-        try:
-            tri = Delaunay(atom_cartesian)  # Delaunay division
-        except:
-            if scale == 1:
-                structure = self.get_structure(mpid, is_primitive, 2, structure=structure)
-                if is_unitcell:
-                    sites_list = self.get_conventional_sites(structure, 2, tol=tol)  # Information on each site in the crystal structure
-                    sites_list_len = len(sites_list)  # Number of sites
-                    atom_cartesian = []  # Cartesian coordinates for each site
-                    atom_species = []  # Type and percentage of atoms occupying the site.
-
-                    for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
-                        atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
-                        atmlabel = sites_list[j]["label"].elements[0].symbol
-                        atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
-                else:
-                    sites_list = structure.as_dict()["sites"]  # Information on each site in the crystal structure
-                    sites_list_len = len(sites_list)  # Number of sites
-                    atom_cartesian = []  # Cartesian coordinates for each site
-                    atom_species = []  # Type and percentage of atoms occupying the site.
-                    for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
-                        atom_cartesian.append(sites_list[j]["xyz"])  # Cartesian coordinates
-                        atmlabel = sites_list[j]["label"]
-                        atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
-                tri = Delaunay(atom_cartesian)  # Delaunay division
+        tri = Delaunay(atom_cartesian)  # Delaunay division
 
         atoms_radius = [mg.Element(el).atomic_radius*(10/scale) if mg.Element(el).atomic_radius != None else (10/scale) for el in atom_species]
         atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
