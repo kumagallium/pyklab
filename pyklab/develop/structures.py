@@ -91,7 +91,7 @@ class Structure():
                 atom_species = []  # Type and percentage of atoms occupying the site.
                 for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
                     abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(sites_list[j]["xyz"]))
-                    if (abc_mat[0]>=(scale*a/3)) and (abc_mat[1]>=(scale*b/3)) and (abc_mat[2]>=(scale*c/3)) and (abc_mat[0]<=(scale*a*2/3)) and (abc_mat[1]<=(scale*b*2/3)) and (abc_mat[2]<=(scale*c*2/3)):
+                    if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
                         atom_cartesian.append(self.get_round(sites_list[j]["xyz"],3))  # Cartesian coordinates
                         print(abc_mat)
                         atmlabel = sites_list[j]["label"]
@@ -156,6 +156,7 @@ class Structure():
                         go.Scatter3d(x=xx,
                                     y=yy,
                                     z=zz,
+                                    hoverinfo="text",
                                     mode='lines',
                                     name='',
                                     line=dict(color= 'rgb(70,70,70)', width=2))]
