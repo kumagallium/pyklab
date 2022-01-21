@@ -1,4 +1,5 @@
 alembic==1.4.1
+anyio==3.4.0
 appnope==0.1.2
 argcomplete==1.12.3
 argon2-cffi==21.1.0
@@ -91,6 +92,8 @@ json5==0.9.5
 jsonschema==4.1.0
 jupyter-client==7.0.6
 jupyter-core==4.8.1
+jupyter-resource-usage==0.6.1
+jupyter-server==1.13.1
 jupyterlab==2.1.0
 jupyterlab-pygments==0.1.2
 jupyterlab-server==1.0.9
@@ -128,7 +131,7 @@ nltk==3.6.5
 notebook==6.4.4
 numba==0.53.1
 numexpr==2.7.3
-numpy==1.19.5
+numpy==1.21.5
 oauthlib==3.1.1
 olefile==0.46
 optuna==2.10.0
@@ -167,7 +170,7 @@ pycparser==2.20
 pydantic==1.8.2
 Pygments==2.10.0
 pyLDAvis==3.2.2
-pymatgen==2021.2.8.1
+pymatgen==2022.0.17
 pymongo==3.12.1
 pynndescent==0.5.5
 pyod==0.9.4
@@ -205,6 +208,7 @@ skope-rules==1.0.1
 slicer==0.0.7
 smart-open==5.2.1
 smmap==4.0.0
+sniffio==1.2.0
 soupsieve==2.0.1
 spacy==2.3.7
 spglib==1.16.1
@@ -237,7 +241,7 @@ visions==0.7.4
 wasabi==0.8.2
 wcwidth==0.2.5
 webencodings==0.5.1
-websocket-client==1.2.1
+websocket-client==1.2.3
 Werkzeug==2.0.2
 wheel==0.37.0
 widgetsnbextension==3.5.1

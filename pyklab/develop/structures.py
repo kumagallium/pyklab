@@ -37,9 +37,11 @@ class Structure():
         sa_structure = SpacegroupAnalyzer(structure_tmp)
         #print(sa_structure.get_space_group_symbol())
         if is_primitive:
+            #structure = structure.get_primitive_structure()
             structure = sa_structure.get_primitive_standard_structure()
             structure.make_supercell([scale, scale, scale])
         else:
+            #structure = structure.get_primitive_structure().get_reduced_structure()
             structure = sa_structure.get_refined_structure()
             structure.make_supercell([scale, scale, scale])
         return structure
@@ -93,7 +95,6 @@ class Structure():
                     abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(sites_list[j]["xyz"]))
                     if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
                         atom_cartesian.append(self.get_round(sites_list[j]["xyz"],3))  # Cartesian coordinates
-                        print(abc_mat)
                         atmlabel = sites_list[j]["label"]
                         atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
                 tri = Delaunay(atom_cartesian)  # Delaunay division
