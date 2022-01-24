@@ -64,58 +64,65 @@ class Structure():
         structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
         structure_tmp.make_supercell([3, 3, 3])
-        sites_list = structure_tmp.as_dict()["sites"]  # Information on each site in the crystal structure
+        xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
+        label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
         matrix = self.get_round(structure_tmp.lattice.matrix)
         a, b, c = self.get_round(structure_tmp.lattice.abc)
-        sites_list_len = len(sites_list)  # Number of sites
-        atom_cartesian = []  # Cartesian coordinates for each site
-        atom_species = []  # Type and percentage of atoms occupying the site.
-        for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
-            abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(sites_list[j]["xyz"]))
-            if (abc_mat[0]>=(scale*a/3)) and (abc_mat[1]>=(scale*b/3)) and (abc_mat[2]>=(scale*c/3)) and (abc_mat[0]<=(scale*a*2/3)) and (abc_mat[1]<=(scale*b*2/3)) and (abc_mat[2]<=(scale*c*2/3)):
-                atom_cartesian.append(self.get_round(sites_list[j]["xyz"],3))  # Cartesian coordinates
-                atmlabel = sites_list[j]["label"]
-                atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
 
-        try:
-            tri = Delaunay(atom_cartesian)  # Delaunay division
-        except:
-            print("scale2")
-            if scale == 1:
-                scale = 2
-                structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
-                structure_tmp.make_supercell([3, 3, 3])
-                sites_list = structure_tmp.as_dict()["sites"]  # Information on each site in the crystal structure
-                matrix = self.get_round(structure_tmp.lattice.matrix)
-                a, b, c = self.get_round(structure_tmp.lattice.abc)
-                sites_list_len = len(sites_list)  # Number of sites
-                atom_cartesian = []  # Cartesian coordinates for each site
-                atom_species = []  # Type and percentage of atoms occupying the site.
-                for j in range(sites_list_len):  # Obtain information on each site in the crystal structure
-                    abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(sites_list[j]["xyz"]))
-                    if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
-                        atom_cartesian.append(self.get_round(sites_list[j]["xyz"],3))  # Cartesian coordinates
-                        atmlabel = sites_list[j]["label"]
-                        atom_species.append(atmlabel)  # Type and percentage of atoms occupying the site.
-                tri = Delaunay(atom_cartesian)  # Delaunay division
+        tri = Delaunay(xyz_list)
 
-        atoms_radius = [mg.Element(el).atomic_radius*(10/scale) if mg.Element(el).atomic_radius != None else (10/scale) for el in atom_species]
-        atoms_color = [elements[elements["symbol"]==el]["CPK"].values[0] for el in atom_species]
-        atom_idx_dict = dict(zip(set(atom_species), range(len(set(atom_species)))))
-        atom_idxs = [atom_idx_dict[atmsp] for atmsp in atom_species]
+        simplices_all = tri.simplices
+        points_all = tri.points
 
+        include_idxs = []
+        for i, point in enumerate(points_all):
+            abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
+            if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
+                include_idxs.append(i)
+        
         ijklist = []
-        for tet in tri.simplices:
-            for comb in itertools.combinations(tet, 3):
-                comb = np.sort(comb)
-                i = comb[0]
-                j = comb[1]
-                k = comb[2]
+        pidxs = []
+        atoms_radius = []
+        atoms_color = []
+        for tet in simplices_all:
+            if len(set(tet)&set(include_idxs)) > 0:
+                for comb in itertools.combinations(tet, 3):
+                    comb = np.sort(comb)
+                    i = comb[0]
+                    j = comb[1]
+                    k = comb[2]
 
-                ijklist.append((i, j, k))
+                    ijklist.append((i, j, k))  
+                    pidxs.extend((i, j, k))
+                    pidxs = list(set(pidxs))
+        
+        atom_idx_dict = dict(zip(set(np.array(label_list)), range(len(set(np.array(label_list))))))
+        viz_points = []
+        atoms_radius = []
+        atoms_color = []
+        atom_idxs = []
+        atom_species = []
+        pidx_dict = {}
+        for i, pidx in enumerate(np.sort(pidxs)):
+            viz_points.append(points_all[pidx])
+            if mg.Element(label_list[pidx]).atomic_radius != None:
+                atoms_radius.append(mg.Element(label_list[pidx]).atomic_radius*(10/scale))
+            else:
+                atoms_radius.append(10/scale)
+            atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            atom_idxs.append(atom_idx_dict[label_list[pidx]])
+            atom_species.append(label_list[pidx])
+            pidx_dict[pidx] = i
+        
+        viz_ijk = []
+        for ijk in ijklist:
+            ijk_tmp = []
+            for tmp in ijk:
+                ijk_tmp.append(pidx_dict[tmp])
+            viz_ijk.append(tuple(ijk_tmp))
 
-        pts = np.array(tri.points)
-        ijk = np.array(list(set(ijklist)))
+        pts = np.array(viz_points)
+        ijk = np.array(list(set(viz_ijk)))
 
         return {"pts": pts, "ijk": ijk, "matrix":matrix, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
 
@@ -157,7 +164,7 @@ class Structure():
                         go.Scatter3d(x=xx,
                                     y=yy,
                                     z=zz,
-                                    hoverinfo="text",
+                                    #hoverinfo="text",
                                     mode='lines',
                                     name='',
                                     line=dict(color= 'rgb(70,70,70)', width=2))]
