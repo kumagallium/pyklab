@@ -281,6 +281,7 @@ class AD:
 
     def save_parityplot_ad_starrydata_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize):
         fig = plt.figure(figsize=(6, 6), dpi=300, facecolor='w', edgecolor='k')
+        alflist = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
         for idx, tg in enumerate(targets):
             ax = fig.add_subplot(2, 2, idx+1)
             ax.xaxis.set_ticks_position('both')
@@ -304,8 +305,12 @@ class AD:
                 ax.set_ylabel("Predicted $zT$")
                 t_min = 5
                 t_max = -2
-                ax.set_xlim(0, 1.5)
-                ax.set_ylim(0, 1.5)
+                xmin = 0
+                xmax = 2
+                ymin = 0
+                ymax = 2
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
             elif tg == "ZTcalc":
                 test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
                 test_outAD_S = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Seebeck coefficient"]]], axis=1)
@@ -342,8 +347,12 @@ class AD:
                 ax.set_ylabel("Predicted $zT_{ \mathrm{calc}}$")
                 t_min = 5
                 t_max = -2
-                ax.set_xlim(0, 1.5)
-                ax.set_ylim(0, 1.5)
+                xmin = 0
+                xmax = 2
+                ymin = 0
+                ymax = 2
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
             elif tg == "PFcalc":
                 test_inAD_S = pd.concat([df_test_inAD.iloc[:, :inputsize], df_test_inAD[["Seebeck coefficient"]]], axis=1)
                 test_outAD_S = pd.concat([df_test_outAD.iloc[:, :inputsize], df_test_outAD[["Seebeck coefficient"]]], axis=1)
@@ -371,8 +380,12 @@ class AD:
 
                 ax.set_xlabel("Experimental $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
                 ax.set_ylabel("Predicted $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
-                ax.set_xlim(0, 5)
-                ax.set_ylim(0, 5)
+                xmin = 0
+                xmax = 5
+                ymin = 0
+                ymax = 5
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
             else:
                 test_inAD = pd.concat([df_test_inAD.iloc[:, :inputsize],df_test_inAD[[tg]]], axis=1)
                 test_outAD = pd.concat([df_test_outAD.iloc[:, :inputsize],df_test_outAD[[tg]]], axis=1)
@@ -388,13 +401,21 @@ class AD:
                 if tg == "Thermal conductivity":
                     ax.set_xlabel("Experimental $\u03BA$ [Wm$^{-1}$K$^{-1}$]")
                     ax.set_ylabel("Predicted  $\u03BA$ [Wm$^{-1}$K$^{-1}$]")
-                    ax.set_xlim(0, 7)
-                    ax.set_ylim(0, 7)
+                    xmin = 0
+                    xmax = 7
+                    ymin = 0
+                    ymax = 7
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
                 elif tg == "Seebeck coefficient":
                     ax.set_xlabel("Experimental $S$ [\u03BCVK$^{-1}$]")
                     ax.set_ylabel("Predicted $S$ [\u03BCVK$^{-1}$]")
-                    ax.set_xlim(0, 450)
-                    ax.set_ylim(0, 450)
+                    xmin = 0
+                    xmax = 450
+                    ymin = 0
+                    ymax = 450
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
                 elif tg == "Electrical conductivity":
                     trueAD = trueAD/1000000
                     predAD = predAD/1000000
@@ -402,13 +423,21 @@ class AD:
                     predAD_out = predAD_out/1000000
                     ax.set_xlabel("Experimental $\u03C3$ [10$^{6}$\u03A9$^{-1}$m$^{-1}$]")
                     ax.set_ylabel("Predicted  $\u03C3$ [10$^{6}$\u03A9$^{-1}$m$^{-1}$]")
-                    ax.set_xlim(0, 0.6)
-                    ax.set_ylim(0, 0.6)
+                    xmin = 0
+                    xmax = 0.6
+                    ymin = 0
+                    ymax = 0.6
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
                 elif tg == "PF":
                     ax.set_xlabel("Experimental $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
                     ax.set_ylabel("Predicted $PF_{ \mathrm{calc}}$ [mWm$^{-1}$K$^{-2}$]")
-                    ax.set_xlim(0, 5)
-                    ax.set_ylim(0, 5)
+                    xmin = 0
+                    xmax = 5
+                    ymin = 0
+                    ymax = 5
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
                 t_min = 0
                 t_max = trueAD.max()
 
@@ -426,6 +455,8 @@ class AD:
             np.place(ad_reliability_viz, ad_reliability_viz == 0, ad_reliability_viz.min())
             ax.scatter(trueAD_viz, predAD_viz, s=10, c="r", alpha=ad_reliability_viz, lw=0, label="Inside AD")
             ax.scatter(trueAD_out, predAD_out, s=10, c="b", alpha=0.8, lw=0, marker="^", label="Outside AD")
+
+            ax.text(xmin-((xmax-xmin)/3), ymax+((ymax-ymin)/10), "(" + alflist[idx] + ")", size=11,ha="left",va="top")
 
             ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
 
