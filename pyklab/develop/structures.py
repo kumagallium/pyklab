@@ -156,8 +156,7 @@ class Structure():
                                             #hovertext=atom_species,
                                             marker=dict(
                                                     size=atoms_radius,
-                                                    color=atom_idxs,
-                                                    colorscale=atoms_color,
+                                                    color=atoms_color,
                                                     opacity=0.8
                                                 )
                                             ),
