@@ -61,6 +61,15 @@ class Features:
             elif len(composition) == 1:
                 tmp = mg.Element(list(composition.keys())[0]).row
                 return tmp
+        elif description == "block":
+            block_dict = dict(zip(["s","p","d","f"],[0]*4))
+            if len(composition) > 1:
+                for el, frac in composition.items():
+                    block_dict[mg.Element(el).block] += frac / sum(composition.values())
+                return block_dict
+            elif len(composition) == 1:
+                block_dict[mg.Element(list(composition.keys())[0]).block] = 1
+                return block_dict
         elif description == "VEC":
             if len(composition) > 1:
                 tmp = 0
@@ -70,6 +79,19 @@ class Features:
             elif len(composition) == 1:
                 tmp = self.get_VEC(list(composition.keys())[0])
                 return tmp
+        elif description == "First ionization energies":
+            if len(composition) > 1:
+                try:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += mg.Element(el).data["Ionization energies"][0]*frac / sum(composition.values())
+                    return tmp
+                except:
+                    pass
+            elif len(composition) == 1:
+                tmp = mg.Element(list(composition.keys())[0]).data["Ionization energies"][0]
+                return tmp
+
         elif description == "Molar volume":
             if len(composition) > 1:
                 tmp = 0
@@ -137,12 +159,35 @@ class Features:
                 return tmp
             elif len(composition) == 1:
                 return 0
+        elif description == "block":
+            block_dict = dict(zip(["s","p","d","f"],[0]*4))
+            ave_block = self.ave(composition,description)
+            if len(composition) > 1:
+                for el, frac in composition.items():
+                    block_idx = dict(zip(["s","p","d","f"],[0]*4))
+                    block_idx[mg.Element(el).block] = 1
+                    for k, v in block_idx.items():
+                        block_dict[k] += ((v - ave_block[k])**2)*frac / sum(composition.values())
+                return block_dict
+            elif len(composition) == 1:
+                return 0
         elif description == "VEC":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
                     tmp += ((self.get_VEC(el)-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
+            elif len(composition) == 1:
+                return 0
+        elif description == "First ionization energies":
+            if len(composition) > 1:
+                try:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += ((mg.Element(el).data["Ionization energies"][0]-self.ave(composition, description))**2)*frac / sum(composition.values())
+                    return tmp
+                except:
+                    pass
             elif len(composition) == 1:
                 return 0
         elif description == "Molar volume":
@@ -217,6 +262,21 @@ class Features:
                 return np.abs(maxval - minval)
             elif len(composition) == 1:
                 return 0
+        elif description == "block":
+            if len(composition) > 1:
+                block_max_dict = dict(zip(["s","p","d","f"],[0]*4))
+                block_min_dict = dict(zip(["s","p","d","f"],[1]*4))
+                for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
+                    block_idx = dict(zip(["s","p","d","f"],[0]*4))
+                    block_idx[mg.Element(el).block] = 1
+                    for k, v in block_idx.items():
+                        if v >= block_max_dict[k]:
+                            block_max_dict[k] = v
+                        if v <= block_min_dict[k]:
+                            block_min_dict[k] = v
+                return dict(zip(["s","p","d","f"],np.array(list(block_max_dict.values())) - np.array(list(block_min_dict.values()))))
+            elif len(composition) == 1:
+                return 0
         elif description == "VEC":
             if len(composition) > 1:
                 maxval = 0
@@ -231,6 +291,22 @@ class Features:
             elif len(composition) == 1:
                 return 0
             
+        elif description == "First ionization energies":
+            if len(composition) > 1:
+                try:
+                    maxval = 0
+                    minval = 1000000
+                    for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
+                        val = float(mg.Element(el).data["Ionization energies"][0])
+                        if val >= maxval:
+                            maxval = val
+                        if val <= minval:
+                            minval = val
+                    return np.abs(maxval - minval)
+                except:
+                    pass
+            elif len(composition) == 1:
+                return 0
         elif description == "Molar volume":
             if len(composition) > 1:
                 maxval = 0
@@ -321,26 +397,42 @@ class Features:
 
             for desc in desc_tmp:
                 if "ave" in func:
-                    ave_tmp = self.ave(compdict,desc)
-                    if ave_tmp != "no data":
-                        response.update({"ave:"+desc: ave_tmp})
+                    if "block" == desc:
+                        blocks = self.ave(compdict,desc)
+                        for k, v in blocks.items():
+                            response.update({"ave:"+k: v})
                     else:
-                        response.update({"ave:"+desc: np.nan})
+                        ave_tmp = self.ave(compdict,desc)
+                        if ave_tmp != "no data":
+                            response.update({"ave:"+desc: ave_tmp})
+                        else:
+                            response.update({"ave:"+desc: np.nan})
                 if "var" in func:
-                    var_tmp = self.var(compdict,desc)
-                    if var_tmp != "no data":
-                        response.update({ "var:"+desc: var_tmp})
+                    if "block" == desc:
+                        blocks = self.var(compdict,desc)
+                        for k, v in blocks.items():
+                            response.update({"var:"+k: v})
                     else:
-                        response.update({"var:"+desc: np.nan})
+                        var_tmp = self.var(compdict,desc)
+                        if var_tmp != "no data":
+                            response.update({ "var:"+desc: var_tmp})
+                        else:
+                            response.update({"var:"+desc: np.nan})
                 if "main_max1min1diff" in func:
-                    diff_tmp = self.main_max1min1diff(compdict,desc)
-                    if diff_tmp != "no data":
-                        response.update({ "main_max1min1diff:"+desc: diff_tmp})
+                    if "block" == desc:
+                        blocks = self.main_max1min1diff(compdict,desc)
+                        for k, v in blocks.items():
+                            response.update({"main_max1min1diff:"+k: v})
                     else:
-                        response.update({"main_max1min1diff:"+desc: np.nan})
+                        diff_tmp = self.main_max1min1diff(compdict,desc)
+                        if diff_tmp != "no data":
+                            response.update({ "main_max1min1diff:"+desc: diff_tmp})
+                        else:
+                            response.update({"main_max1min1diff:"+desc: np.nan})
             return response
         except:
             response = {}
+            block_dict = dict(zip(["s","p","d","f"],[np.nan]*4))
             desc_tmp = desclist.copy()
             if "comp_length" in desc_tmp:
                 response.update({"comp_length":np.nan})
@@ -352,11 +444,26 @@ class Features:
 
             for desc in desc_tmp:
                 if "ave" in func:
-                    response.update({"ave:"+desc: np.nan})
+                    if "block" == desc:
+                        blocks = block_dict
+                        for k, v in blocks.items():
+                            response.update({"ave:"+k: v})
+                    else:
+                        response.update({"ave:"+desc: np.nan})
                 if "var" in func:
-                    response.update({ "var:"+desc: np.nan})
+                    if "block" == desc:
+                        blocks = block_dict
+                        for k, v in blocks.items():
+                            response.update({"var:"+k: v})
+                    else:
+                        response.update({ "var:"+desc: np.nan})
                 if "main_max1min1diff" in func:
-                    response.update({"main_max1min1diff:"+desc: np.nan})
+                    if "block" == desc:
+                        blocks = block_dict
+                        for k, v in blocks.items():
+                            response.update({"main_max1min1diff:"+k: v})
+                    else:
+                        response.update({"main_max1min1diff:"+desc: np.nan})
             return response
 
     def get_comp_descfeatures(self, complist, func=["ave","var","main_max1min1diff"], desclist=["comp_length", "compbase_length", "Atomic no", "group", "row", "Mendeleev no", "Atomic mass", "Atomic radius", "X", "VEC"]):
