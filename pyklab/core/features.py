@@ -84,22 +84,22 @@ class Features:
                 try:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += mg.Element(el).data["Ionization energies"][0]*frac / sum(composition.values())
+                        tmp += np.log10(mg.Element(el).data["Ionization energies"][0])*frac / sum(composition.values())
                     return tmp
                 except:
                     pass
             elif len(composition) == 1:
-                tmp = mg.Element(list(composition.keys())[0]).data["Ionization energies"][0]
+                tmp = np.log10(mg.Element(list(composition.keys())[0]).data["Ionization energies"][0])
                 return tmp
 
         elif description == "Molar volume":
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])*frac / sum(composition.values())
+                    tmp += np.log10(float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0]))*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("cm<sup>3</sup>")[0])
+                tmp = np.log10(float(mg.Element(list(composition.keys())[0]).data[description].split("cm<sup>3</sup>")[0]))
                 return tmp
         elif description == "Bulk modulus":
             if len(composition) > 1:
@@ -184,7 +184,7 @@ class Features:
                 try:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += ((mg.Element(el).data["Ionization energies"][0]-self.ave(composition, description))**2)*frac / sum(composition.values())
+                        tmp += ((np.log10(mg.Element(el).data["Ionization energies"][0])-self.ave(composition, description))**2)*frac / sum(composition.values())
                     return tmp
                 except:
                     pass
@@ -194,7 +194,7 @@ class Features:
             if len(composition) > 1:
                 tmp = 0
                 for el, frac in composition.items():
-                    tmp +=( (float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])-self.ave(composition,description))**2)*frac / sum(composition.values())
+                    tmp +=( (np.log10(float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0]))-self.ave(composition,description))**2)*frac / sum(composition.values())
                 return tmp
             elif len(composition) == 1:
                 return 0
@@ -297,7 +297,7 @@ class Features:
                     maxval = 0
                     minval = 1000000
                     for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                        val = float(mg.Element(el).data["Ionization energies"][0])
+                        val = np.log10(float(mg.Element(el).data["Ionization energies"][0]))
                         if val >= maxval:
                             maxval = val
                         if val <= minval:
@@ -312,7 +312,7 @@ class Features:
                 maxval = 0
                 minval = 1000000
                 for el in np.array(list(composition.keys()))[np.array(list(composition.values()))>=0.1]:
-                    val = float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0])
+                    val = np.log10(float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0]))
                     if val >= maxval:
                         maxval = val
                     if val <= minval:
