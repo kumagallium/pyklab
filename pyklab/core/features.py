@@ -42,104 +42,107 @@ class Features:
             return {}
 
     def ave(self, composition, description):
-        composition = self.get_comp_dict(composition)
-        if description == "group":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += mg.Element(el).group*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = mg.Element(list(composition.keys())[0]).group
-                return tmp
-        elif description == "row":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += mg.Element(el).row*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = mg.Element(list(composition.keys())[0]).row
-                return tmp
-        elif description == "block":
-            block_dict = dict(zip(["s","p","d","f"],[0]*4))
-            if len(composition) > 1:
-                for el, frac in composition.items():
-                    block_dict[mg.Element(el).block] += frac / sum(composition.values())
-                return block_dict
-            elif len(composition) == 1:
-                block_dict[mg.Element(list(composition.keys())[0]).block] = 1
-                return block_dict
-        elif description == "VEC":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += self.get_VEC(el)*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = self.get_VEC(list(composition.keys())[0])
-                return tmp
-        elif description == "First ionization energies":
-            if len(composition) > 1:
-                try:
+        try:
+            composition = self.get_comp_dict(composition)
+            if description == "group":
+                if len(composition) > 1:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += np.log10(mg.Element(el).data["Ionization energies"][0])*frac / sum(composition.values())
+                        tmp += mg.Element(el).group*frac / sum(composition.values())
                     return tmp
-                except:
-                    pass
-            elif len(composition) == 1:
-                tmp = np.log10(mg.Element(list(composition.keys())[0]).data["Ionization energies"][0])
-                return tmp
+                elif len(composition) == 1:
+                    tmp = mg.Element(list(composition.keys())[0]).group
+                    return tmp
+            elif description == "row":
+                if len(composition) > 1:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += mg.Element(el).row*frac / sum(composition.values())
+                    return tmp
+                elif len(composition) == 1:
+                    tmp = mg.Element(list(composition.keys())[0]).row
+                    return tmp
+            elif description == "block":
+                block_dict = dict(zip(["s","p","d","f"],[0]*4))
+                if len(composition) > 1:
+                    for el, frac in composition.items():
+                        block_dict[mg.Element(el).block] += frac / sum(composition.values())
+                    return block_dict
+                elif len(composition) == 1:
+                    block_dict[mg.Element(list(composition.keys())[0]).block] = 1
+                    return block_dict
+            elif description == "VEC":
+                if len(composition) > 1:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += self.get_VEC(el)*frac / sum(composition.values())
+                    return tmp
+                elif len(composition) == 1:
+                    tmp = self.get_VEC(list(composition.keys())[0])
+                    return tmp
+            elif description == "First ionization energies":
+                if len(composition) > 1:
+                    try:
+                        tmp = 0
+                        for el, frac in composition.items():
+                            tmp += np.log10(mg.Element(el).data["Ionization energies"][0])*frac / sum(composition.values())
+                        return tmp
+                    except:
+                        pass
+                elif len(composition) == 1:
+                    tmp = np.log10(mg.Element(list(composition.keys())[0]).data["Ionization energies"][0])
+                    return tmp
 
-        elif description == "Molar volume":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += np.log10(float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0]))*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = np.log10(float(mg.Element(list(composition.keys())[0]).data[description].split("cm<sup>3</sup>")[0]))
-                return tmp
-        elif description == "Bulk modulus":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[description].split("(liquid)GPa")[0].split("GPa")[0])*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("(liquid)GPa")[0].split("GPa")[0])
-                return tmp
-        elif description == "Melting point":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
-                return tmp
-        elif description == "Boiling point":
-            if len(composition) > 1:
-                tmp = 0
-                for el, frac in composition.items():
-                    tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
-                return tmp
-            elif len(composition) == 1:
-                tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
-                return tmp
-        else:
-            if len(composition) > 1:
-                try:
+            elif description == "Molar volume":
+                if len(composition) > 1:
                     tmp = 0
                     for el, frac in composition.items():
-                        tmp += mg.Element(el).data[description]*frac / sum(composition.values())
+                        tmp += np.log10(float(mg.Element(el).data[description].split("cm<sup>3</sup>")[0]))*frac / sum(composition.values())
                     return tmp
-                except:
-                    pass
-            elif len(composition) == 1:
-                tmp = mg.Element(list(composition.keys())[0]).data[description]
-                return tmp
+                elif len(composition) == 1:
+                    tmp = np.log10(float(mg.Element(list(composition.keys())[0]).data[description].split("cm<sup>3</sup>")[0]))
+                    return tmp
+            elif description == "Bulk modulus":
+                if len(composition) > 1:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += float(mg.Element(el).data[description].split("(liquid)GPa")[0].split("GPa")[0])*frac / sum(composition.values())
+                    return tmp
+                elif len(composition) == 1:
+                    tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("(liquid)GPa")[0].split("GPa")[0])
+                    return tmp
+            elif description == "Melting point":
+                if len(composition) > 1:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
+                    return tmp
+                elif len(composition) == 1:
+                    tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
+                    return tmp
+            elif description == "Boiling point":
+                if len(composition) > 1:
+                    tmp = 0
+                    for el, frac in composition.items():
+                        tmp += float(mg.Element(el).data[description].split("K")[0])*frac / sum(composition.values())
+                    return tmp
+                elif len(composition) == 1:
+                    tmp = float(mg.Element(list(composition.keys())[0]).data[description].split("K")[0])
+                    return tmp
+            else:
+                if len(composition) > 1:
+                    try:
+                        tmp = 0
+                        for el, frac in composition.items():
+                            tmp += mg.Element(el).data[description]*frac / sum(composition.values())
+                        return tmp
+                    except:
+                        return tmp
+                elif len(composition) == 1:
+                    return mg.Element(list(composition.keys())[0]).data[description]
+        except:
+            print(composition,description)
+            return 0
 
     def var(self, composition, description):
         composition = self.get_comp_dict(composition=composition)
@@ -406,7 +409,7 @@ class Features:
                         if ave_tmp != "no data":
                             response.update({"ave:"+desc: ave_tmp})
                         else:
-                            response.update({"ave:"+desc: np.nan})
+                            response.update({"ave:"+desc: 0})
                 if "var" in func:
                     if "block" == desc:
                         blocks = self.var(compdict,desc)
@@ -417,7 +420,7 @@ class Features:
                         if var_tmp != "no data":
                             response.update({ "var:"+desc: var_tmp})
                         else:
-                            response.update({"var:"+desc: np.nan})
+                            response.update({"var:"+desc: 0})
                 if "main_max1min1diff" in func:
                     if "block" == desc:
                         blocks = self.main_max1min1diff(compdict,desc)
@@ -428,7 +431,7 @@ class Features:
                         if diff_tmp != "no data":
                             response.update({ "main_max1min1diff:"+desc: diff_tmp})
                         else:
-                            response.update({"main_max1min1diff:"+desc: np.nan})
+                            response.update({"main_max1min1diff:"+desc: 0})
             return response
         except:
             response = {}
