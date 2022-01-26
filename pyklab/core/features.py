@@ -170,7 +170,7 @@ class Features:
                         block_dict[k] += ((v - ave_block[k])**2)*frac / sum(composition.values())
                 return block_dict
             elif len(composition) == 1:
-                return 0
+                return dict(zip(["s","p","d","f"],[0]*4))
         elif description == "VEC":
             if len(composition) > 1:
                 tmp = 0
@@ -276,7 +276,7 @@ class Features:
                             block_min_dict[k] = v
                 return dict(zip(["s","p","d","f"],np.array(list(block_max_dict.values())) - np.array(list(block_min_dict.values()))))
             elif len(composition) == 1:
-                return 0
+                return dict(zip(["s","p","d","f"],[0]*4))
         elif description == "VEC":
             if len(composition) > 1:
                 maxval = 0
