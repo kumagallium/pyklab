@@ -66,8 +66,8 @@ class Structure():
         structure_tmp.make_supercell([3, 3, 3])
         xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
         label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
-        matrix = self.get_round(structure_tmp.lattice.matrix)
-        a, b, c = self.get_round(structure_tmp.lattice.abc)
+        matrix = structure_tmp.lattice.matrix
+        a, b, c = structure_tmp.lattice.abc
 
         tri = Delaunay(xyz_list)
 
@@ -76,7 +76,7 @@ class Structure():
 
         include_idxs = []
         for i, point in enumerate(points_all):
-            abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
+            abc_mat = structure_tmp.lattice.get_vector_along_lattice_directions(point)
             if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
                 include_idxs.append(i)
         
