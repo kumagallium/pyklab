@@ -56,8 +56,12 @@ class Structure():
 
         return df_mpdata
 
+    def my_round(self, val, digit=2):
+        p = 10 ** digit
+        return (val * p * 2 + 1) // 2 / p
+
     def get_round(self, arr,digit=2):
-        res = np.array([np.round(val,digit) for val in arr])
+        res = np.array([self.my_round(val,digit) for val in arr])
         return res
 
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
@@ -67,7 +71,7 @@ class Structure():
         xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
         label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
         matrix = structure_tmp.lattice.matrix
-        a, b, c = structure_tmp.lattice.abc
+        a, b, c = self.get_round(structure_tmp.lattice.abc)
 
         tri = Delaunay(xyz_list)
 
@@ -76,14 +80,12 @@ class Structure():
 
         include_idxs = []
         for i, point in enumerate(points_all):
-            abc_mat = structure_tmp.lattice.get_vector_along_lattice_directions(point)
+            abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
             if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
                 include_idxs.append(i)
         
         ijklist = []
         pidxs = []
-        atoms_radius = []
-        atoms_color = []
         for tet in simplices_all:
             if len(set(tet)&set(include_idxs)) > 0:
                 for comb in itertools.combinations(tet, 3):

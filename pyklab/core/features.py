@@ -141,7 +141,6 @@ class Features:
                 elif len(composition) == 1:
                     return mg.Element(list(composition.keys())[0]).data[description]
         except:
-            print(composition,description)
             return 0
 
     def var(self, composition, description):
