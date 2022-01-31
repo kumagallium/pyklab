@@ -32,7 +32,7 @@ class Structure():
         if structure == "":
             structure_tmp = pmg.get_structure_by_material_id(mpid)
         else:
-            structure_tmp = structure
+            structure_tmp = structure.copy()
 
         sa_structure = SpacegroupAnalyzer(structure_tmp)
         #print(sa_structure.get_space_group_symbol())
@@ -78,10 +78,11 @@ class Structure():
         simplices_all = tri.simplices
         points_all = tri.points
 
+        tol = 0.05 #Error in atomic coordinates[angstrom]
         include_idxs = []
         for i, point in enumerate(points_all):
             abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
-            if (abc_mat[0]>=(a/3)) and (abc_mat[1]>=(b/3)) and (abc_mat[2]>=(c/3)) and (abc_mat[0]<=(a*2/3)) and (abc_mat[1]<=(b*2/3)) and (abc_mat[2]<=(c*2/3)):
+            if (abc_mat[0]>=(a*1/3)-tol) and (abc_mat[1]>=(b*1/3)-tol) and (abc_mat[2]>=(c*1/3)-tol) and (abc_mat[0]<=(a*2/3)+tol) and (abc_mat[1]<=(b*2/3)+tol) and (abc_mat[2]<=(c*2/3)+tol):
                 include_idxs.append(i)
         
         ijklist = []
