@@ -2,6 +2,8 @@ import pymatgen.core as mg
 import numpy as np
 import pandas as pd
 from tqdm.notebook import tqdm
+from .atom_init import Atom_init
+from bokeh.sampledata.periodic_table import elements
 
 
 class Features:
@@ -40,6 +42,25 @@ class Features:
             return dict(mg.Composition(composition).fractional_composition.get_el_amt_dict())
         except:
             return {}
+
+    def get_atom_init(self):
+        atom_init = Atom_init.cgcnn_atom_init()
+        return atom_init
+    
+    def get_ave_atom_init(self, composition):
+        compdict = self.get_comp_dict(composition)
+
+        atom_init = Atom_init.cgcnn_atom_init()
+        el_dict = dict(elements[["symbol","atomic number"]].values)
+
+        if len(compdict) > 1:
+            tmp = 0
+            for el, _ in compdict.items():
+                tmp += np.array(atom_init[el_dict[el]])/len(compdict)
+            return tmp
+        elif len(compdict) == 1:
+            tmp = atom_init[el_dict[list(compdict.keys())[0]]]
+            return tmp
 
     def ave(self, composition, description):
         try:
