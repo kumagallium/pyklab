@@ -53,14 +53,18 @@ class Features:
         atom_init = Atom_init.cgcnn_atom_init()
         el_dict = dict(elements[["symbol","atomic number"]].values)
 
-        if len(compdict) > 1:
-            tmp = 0
-            for el, _ in compdict.items():
-                tmp += np.array(atom_init[el_dict[el]])/len(compdict)
-            return tmp
-        elif len(compdict) == 1:
-            tmp = atom_init[el_dict[list(compdict.keys())[0]]]
-            return tmp
+        try:
+            if len(compdict) > 1:
+                tmp = 0
+                for el, _ in compdict.items():
+                    tmp += np.array(atom_init[el_dict[el]])/len(compdict)
+                return tmp
+            elif len(compdict) == 1:
+                tmp = atom_init[el_dict[list(compdict.keys())[0]]]
+                return tmp
+        except:
+            #Elements with atomic number more than 100
+            return [np.nan]*len(atom_init[1])
 
     def ave(self, composition, description):
         try:
