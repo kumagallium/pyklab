@@ -141,7 +141,8 @@ class Features:
                 elif len(composition) == 1:
                     return mg.Element(list(composition.keys())[0]).data[description]
         except:
-            return 0
+            #print(composition, description)
+            return np.nan
 
     def var(self, composition, description):
         composition = self.get_comp_dict(composition=composition)
