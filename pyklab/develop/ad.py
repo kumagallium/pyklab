@@ -84,7 +84,7 @@ class AD:
     def create_ad_starrydata_models(self, targets, df_train, inputsize):
         for target in tqdm(targets):
             train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
-            reg_models = regression.setup(train, target=target, session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
+            reg_models = regression.setup(train, target=target, session_id=1000, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
             selected_model = regression.create_model('rf', verbose=False)
             final_model = regression.finalize_model(selected_model)
             if not os.path.exists(self.model_dirpath):
@@ -94,7 +94,7 @@ class AD:
     def create_final_model(self, target, df_data, inputsize):
         df_train_all = df_data.copy()
         df_train_all = pd.concat([df_data.iloc[:, :inputsize], df_data[[target]]], axis=1)
-        reg_models = regression.setup(df_train_all, target=target[0], session_id=0, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
+        reg_models = regression.setup(df_train_all, target=target[0], session_id=1000, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
         selected_model = regression.create_model('rf',verbose=False)
         #pred_model = regression.predict_model(selected_model)
         final_model = regression.finalize_model(selected_model)
