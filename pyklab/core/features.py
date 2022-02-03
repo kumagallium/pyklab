@@ -58,13 +58,13 @@ class Features:
                 tmp = 0
                 for el, _ in compdict.items():
                     tmp += np.array(atom_init[el_dict[el]])/len(compdict)
-                return tmp
+                return np.array(tmp)
             elif len(compdict) == 1:
                 tmp = atom_init[el_dict[list(compdict.keys())[0]]]
-                return tmp
+                return np.array(tmp)
         except:
             #Elements with atomic number more than 100
-            return [np.nan]*len(atom_init[1])
+            return np.array([np.nan]*len(atom_init[1]))
 
     def ave(self, composition, description):
         try:
