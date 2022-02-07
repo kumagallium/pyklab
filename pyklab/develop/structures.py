@@ -64,6 +64,71 @@ class Structure():
         res = np.array([self.my_round(val,digit) for val in arr])
         return res
 
+    def get_delaunay_tetrahedron(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
+        structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
+
+        structure_tmp.make_supercell([3, 3, 3])
+        xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
+        label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
+        matrix = structure_tmp.lattice.matrix
+        a, b, c = self.get_round(structure_tmp.lattice.abc)
+
+        tri = Delaunay(xyz_list)
+
+        simplices_all = tri.simplices
+        points_all = tri.points
+
+        tol = 0.05 #Error in atomic coordinates[angstrom]
+        include_idxs = []
+        for i, point in enumerate(points_all):
+            abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
+            if (abc_mat[0]>=(a*1/3)-tol) and (abc_mat[1]>=(b*1/3)-tol) and (abc_mat[2]>=(c*1/3)-tol) and (abc_mat[0]<=(a*2/3)+tol) and (abc_mat[1]<=(b*2/3)+tol) and (abc_mat[2]<=(c*2/3)+tol):
+                include_idxs.append(i)
+        
+        ijklist = []
+        pidxs = []
+        for tet in simplices_all:
+            if len(set(tet)&set(include_idxs)) > 0:
+                tet = np.sort(tet)
+                i = tet[0]
+                j = tet[1]
+                k = tet[2]
+                w = tet[2]
+
+                ijklist.append((i, j, k, w))  
+                pidxs.extend((i, j, k, w))
+                pidxs = list(set(pidxs))
+        
+        atom_idx_dict = dict(zip(set(np.array(label_list)), range(len(set(np.array(label_list))))))
+        viz_points = []
+        atoms_radius = []
+        atoms_color = []
+        atom_idxs = []
+        atom_species = []
+        pidx_dict = {}
+        for i, pidx in enumerate(np.sort(pidxs)):
+            viz_points.append(points_all[pidx])
+            if mg.Element(label_list[pidx]).atomic_radius != None:
+                atoms_radius.append(mg.Element(label_list[pidx]).atomic_radius*(10/scale))
+            else:
+                atoms_radius.append(10/scale)
+            atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            atom_idxs.append(atom_idx_dict[label_list[pidx]])
+            atom_species.append(label_list[pidx])
+            pidx_dict[pidx] = i
+        
+        viz_ijk = []
+        for ijk in ijklist:
+            ijk_tmp = []
+            for tmp in ijk:
+                ijk_tmp.append(pidx_dict[tmp])
+            viz_ijk.append(tuple(ijk_tmp))
+
+        pts = np.array(viz_points)
+        ijk = np.array(list(set(viz_ijk)))
+
+        return {"pts": pts, "ijk": ijk, "matrix":matrix, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
+
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
         structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
