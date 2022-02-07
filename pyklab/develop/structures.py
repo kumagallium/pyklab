@@ -93,7 +93,7 @@ class Structure():
                 i = tet[0]
                 j = tet[1]
                 k = tet[2]
-                w = tet[2]
+                w = tet[3]
 
                 ijklist.append((i, j, k, w))  
                 pidxs.extend((i, j, k, w))
