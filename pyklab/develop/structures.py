@@ -132,7 +132,7 @@ class Structure():
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
         structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
-        structure_tmp.make_supercell([3, 3, 3])
+        structure_tmp.make_supercell([5, 5, 5])
         xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
         label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
         matrix = structure_tmp.lattice.matrix
@@ -147,7 +147,7 @@ class Structure():
         include_idxs = []
         for i, point in enumerate(points_all):
             abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
-            if (abc_mat[0]>=(a*1/3)-tol) and (abc_mat[1]>=(b*1/3)-tol) and (abc_mat[2]>=(c*1/3)-tol) and (abc_mat[0]<=(a*2/3)+tol) and (abc_mat[1]<=(b*2/3)+tol) and (abc_mat[2]<=(c*2/3)+tol):
+            if (abc_mat[0]>=(a*2/5)-tol) and (abc_mat[1]>=(b*2/5)-tol) and (abc_mat[2]>=(c*2/5)-tol) and (abc_mat[0]<=(a*3/5)+tol) and (abc_mat[1]<=(b*3/5)+tol) and (abc_mat[2]<=(c*3/5)+tol):
                 include_idxs.append(i)
         
         ijklist = []
@@ -202,7 +202,7 @@ class Structure():
         print(len(pts))
         print(len(ijk))
 
-        xyz = list(product([1/3,2/3], repeat=3))
+        xyz = list(product([2/5,3/5], repeat=3))
         xyz = [np.dot(np.array(xyz_tmp),matrix) for xyz_tmp in xyz]
 
         xx,yy,zz = np.array([xyz[0],xyz[1],xyz[3],xyz[2],xyz[0]
