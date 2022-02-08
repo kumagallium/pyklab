@@ -56,8 +56,8 @@ class Features:
         try:
             if len(compdict) > 1:
                 tmp = 0
-                for el, _ in compdict.items():
-                    tmp += np.array(atom_init[el_dict[el]])/len(compdict)
+                for el, frac in compdict.items():
+                    tmp += frac*np.array(atom_init[el_dict[el]])#/len(compdict)
                 return np.array(tmp)
             elif len(compdict) == 1:
                 tmp = atom_init[el_dict[list(compdict.keys())[0]]]
@@ -505,6 +505,7 @@ class Features:
 
     def get_tetrahedron_index(self, i,ijks):
         nn_faces = np.array([], dtype=np.float32)
+        flag = 0
         for j, ijk_2 in enumerate(ijks):
             for idx in range(4):
                 ijk_tmp = list(ijks[i].copy())
@@ -514,8 +515,9 @@ class Features:
                     nn_faces = np.append(nn_faces,j)
                     break
         if len(nn_faces) < 4:
+            flag = 1
             nn_faces = np.append(nn_faces,[i]*(4-len(nn_faces)))
-        return nn_faces
+        return nn_faces, flag
 
     def get_delaunay_feature(self, pts, ijks, atom_species):
         mesh_tmp = pts[ijks[0][0]].astype(np.float32)
@@ -523,7 +525,9 @@ class Features:
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][2]].astype(np.float32), axis=0)
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][3]].astype(np.float32), axis=0)
         
-        mesh_tmp = np.append(mesh_tmp,self.get_tetrahedron_index(0,ijks).astype(np.float32), axis=0)
+        tetra_idxs, flag = self.get_tetrahedron_index(0,ijks)
+        mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
+        mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
         comp = atom_species[ijks[0][0]]+atom_species[ijks[0][1]]+atom_species[ijks[0][2]]
         #comp = mg.Composition(comp_tmp).fractional_composition.formula
@@ -538,10 +542,14 @@ class Features:
             mesh_tmp = np.append(mesh_tmp,pts[ijk[1]].astype(np.float32), axis=0)
             mesh_tmp = np.append(mesh_tmp,pts[ijk[2]].astype(np.float32), axis=0)
             mesh_tmp = np.append(mesh_tmp,pts[ijk[3]].astype(np.float32), axis=0)
-            
-            mesh_tmp = np.append(mesh_tmp,self.get_tetrahedron_index(1+idx,ijks).astype(np.float32), axis=0)
+
+            tetra_idxs, flag = self.get_tetrahedron_index(1+idx,ijks)
+            mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
+            mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
             comp = atom_species[ijk[0]]+atom_species[ijk[1]]+atom_species[ijk[2]]
+
+            #print(comp)
             
             feature = self.get_ave_atom_init(comp).astype(np.float32)
             mesh_tmp = np.append(mesh_tmp,feature, axis=0)
