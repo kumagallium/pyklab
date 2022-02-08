@@ -434,4 +434,4 @@ class Structure():
         if self.check_edges(adj, startnode, connect_idxs):
             return True, mpid
         else:
-            return False, np.nan
+            return False, mpid
