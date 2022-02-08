@@ -129,6 +129,12 @@ class Structure():
 
         return {"pts": pts, "ijk": ijk, "matrix":matrix, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
 
+    def get_delaunay_tetrahedron_multipro(self, mpid, is_primitive, scale, structure):
+        delaunay_dict = {}
+        delaunay_data = list(self.get_delaunay_tetrahedron(mpid=mpid, is_primitive=is_primitive, scale=scale, structure=structure).values())
+        delaunay_dict[mpid] = delaunay_data
+        return delaunay_dict
+
     def get_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
         structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
