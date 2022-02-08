@@ -502,3 +502,65 @@ class Features:
             features.append(tmp)
         df_feature = pd.DataFrame(features)
         return df_feature
+
+    def get_tetrahedron_index(self, i,ijks):
+        nn_faces = np.array([], dtype=np.float32)
+        for j, ijk_2 in enumerate(ijks):
+            for idx in range(4):
+                ijk_tmp = list(ijks[i].copy())
+                ijk_tmp.pop(idx)
+                if (len(set(ijk_tmp)&set(ijk_2))==3) and (i!=j):
+                    #print(ijk_tmp,ijk_2)
+                    nn_faces = np.append(nn_faces,j)
+                    break
+        if len(nn_faces) < 4:
+            nn_faces = np.append(nn_faces,[i]*(4-len(nn_faces)))
+        return nn_faces
+
+    def get_delaunay_feature(self, pts, ijks, atom_species):
+        mesh_tmp = pts[ijks[0][0]].astype(np.float32)
+        mesh_tmp = np.append(mesh_tmp,pts[ijks[0][1]].astype(np.float32), axis=0)
+        mesh_tmp = np.append(mesh_tmp,pts[ijks[0][2]].astype(np.float32), axis=0)
+        mesh_tmp = np.append(mesh_tmp,pts[ijks[0][3]].astype(np.float32), axis=0)
+        
+        mesh_tmp = np.append(mesh_tmp,self.get_tetrahedron_index(0,ijks).astype(np.float32), axis=0)
+
+        comp = atom_species[ijks[0][0]]+atom_species[ijks[0][1]]+atom_species[ijks[0][2]]
+        #comp = mg.Composition(comp_tmp).fractional_composition.formula
+        
+        feature = self.get_ave_atom_init(comp).astype(np.float32)
+        mesh_tmp = np.append(mesh_tmp,feature, axis=0)
+
+        mesh_data = mesh_tmp.reshape(1, len(mesh_tmp))
+
+        for idx, ijk in enumerate(ijks[1:]):
+            mesh_tmp = pts[ijk[0]].astype(np.float32)
+            mesh_tmp = np.append(mesh_tmp,pts[ijk[1]].astype(np.float32), axis=0)
+            mesh_tmp = np.append(mesh_tmp,pts[ijk[2]].astype(np.float32), axis=0)
+            mesh_tmp = np.append(mesh_tmp,pts[ijk[3]].astype(np.float32), axis=0)
+            
+            mesh_tmp = np.append(mesh_tmp,self.get_tetrahedron_index(1+idx,ijks).astype(np.float32), axis=0)
+
+            comp = atom_species[ijk[0]]+atom_species[ijk[1]]+atom_species[ijk[2]]
+            
+            feature = self.get_ave_atom_init(comp).astype(np.float32)
+            mesh_tmp = np.append(mesh_tmp,feature, axis=0)
+
+            #print(mesh_data)
+            #print(mesh_tmp)
+            mesh_data = np.append(mesh_data,mesh_tmp.reshape(1, len(mesh_tmp)), axis=0)
+
+        return mesh_data
+
+    def create_ctn_datasets(self, mpid, delaunay_alldata):
+        print(mpid)
+        try:
+            pts, ijks, _, atom_species, _, _, _ = delaunay_alldata[mpid]
+            mesh_data = self.get_delaunay_feature(pts, ijks, atom_species)
+            if np.isnan(mesh_data.flatten()).sum() == 0:
+                return mesh_data
+            else:
+                print(mpid)
+        except:
+            print(mpid)
+
