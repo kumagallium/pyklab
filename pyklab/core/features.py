@@ -560,9 +560,11 @@ class Features:
 
         return mesh_data
 
-    def create_ctn_datasets(self, delaunay_alldata):
+    def create_ctn_datasets(self, mpid, delaunay_alldata):
         pts, ijks, _, atom_species, _, _, _ = delaunay_alldata
         mesh_data = self.get_delaunay_feature(pts, ijks, atom_species)
+        mesh_dict = {}
+        mesh_dict[mpid] = mesh_data
         if np.isnan(mesh_data.flatten()).sum() == 0:
-            return mesh_data
+            return mesh_dict
 
