@@ -430,10 +430,13 @@ class Structure():
             structure = self.get_structure(mpid,is_primitive, scale,structure_tmp)
             _, _, adj, _, _ = self.create_crystal_graph(structure, graphtype)
             adj = np.array(adj)+np.array(adj).T
-            connect_idxs = [0]*len(adj)
-            startnode = [0]
-            if self.check_edges(adj, startnode, connect_idxs):
-                return True, mpid
+            if len(adj) > 1:
+                connect_idxs = [0]*len(adj)
+                startnode = [0]
+                if self.check_edges(adj, startnode, connect_idxs):
+                    return True, mpid
+                else:
+                    return False, mpid
             else:
                 return False, mpid
         except:
