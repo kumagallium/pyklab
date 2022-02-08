@@ -408,3 +408,30 @@ class Structure():
 
         self.view_graph(G, node2atom)
         plt.show()
+
+    def check_edges(self, adj, searchlist, connects):
+        new_searchlist = []
+        for sl in searchlist:
+            connects[sl] = 1
+            save_idxs = np.array(connects)^np.array([1]*len(adj))
+            idxs = np.array(adj[sl])
+            searchidx = idxs & save_idxs
+            new_searchlist.extend(np.where(np.array(searchidx) > 0)[0])
+            new_searchlist = list(set(new_searchlist))
+            
+        if len(new_searchlist) <= 0:
+            return np.sum(connects) == len(adj)
+        
+        return self.check_edges(adj, new_searchlist, connects)
+
+
+    def is_cg_mpid(self, mpid, structure_tmp, is_primitive, scale, graphtype):
+        structure = self.get_structure(mpid,is_primitive, scale,structure_tmp)
+        _, _, adj, _, _ = self.create_crystal_graph(structure, graphtype)
+        adj = np.array(adj)+np.array(adj).T
+        connect_idxs = [0]*len(adj)
+        startnode = [0]
+        if self.check_edges(adj, startnode, connect_idxs):
+            return True, mpid
+        else:
+            return False, np.nan
