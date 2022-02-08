@@ -553,7 +553,6 @@ class Features:
         return mesh_data
 
     def create_ctn_datasets(self, mpid, delaunay_alldata):
-        print(mpid)
         try:
             pts, ijks, _, atom_species, _, _, _ = delaunay_alldata[mpid]
             mesh_data = self.get_delaunay_feature(pts, ijks, atom_species)
