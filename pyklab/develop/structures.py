@@ -67,7 +67,7 @@ class Structure():
     def get_delaunay_tetrahedron(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
         structure_tmp = self.get_structure(mpid, is_primitive, scale, structure=structure)
 
-        structure_tmp.make_supercell([3, 3, 3])
+        structure_tmp.make_supercell([5, 5, 5])
         xyz_list = [site["xyz"] for site in structure_tmp.as_dict()["sites"]]  # Information on each site in the crystal structure
         label_list = [site["label"] for site in structure_tmp.as_dict()["sites"]] 
         matrix = structure_tmp.lattice.matrix
@@ -82,7 +82,7 @@ class Structure():
         include_idxs = []
         for i, point in enumerate(points_all):
             abc_mat = self.get_round(structure_tmp.lattice.get_vector_along_lattice_directions(point))
-            if (abc_mat[0]>=(a*1/3)-tol) and (abc_mat[1]>=(b*1/3)-tol) and (abc_mat[2]>=(c*1/3)-tol) and (abc_mat[0]<=(a*2/3)+tol) and (abc_mat[1]<=(b*2/3)+tol) and (abc_mat[2]<=(c*2/3)+tol):
+            if (abc_mat[0]>=(a*2/5)-tol) and (abc_mat[1]>=(b*2/5)-tol) and (abc_mat[2]>=(c*2/5)-tol) and (abc_mat[0]<=(a*3/5)+tol) and (abc_mat[1]<=(b*3/5)+tol) and (abc_mat[2]<=(c*3/5)+tol):
                 include_idxs.append(i)
         
         ijklist = []
@@ -199,6 +199,12 @@ class Structure():
         ijk = np.array(list(set(viz_ijk)))
 
         return {"pts": pts, "ijk": ijk, "matrix":matrix, "atom_species": atom_species, "atoms_radius": atoms_radius, "atoms_color": atoms_color, "atom_idxs": atom_idxs}
+
+    def get_delaunay_multipro(self, mpid, is_primitive, scale, structure):
+            delaunay_dict = {}
+            delaunay_data = list(self.get_delaunay(mpid=mpid, is_primitive=is_primitive, scale=scale, structure=structure).values())
+            delaunay_dict[mpid] = delaunay_data
+            return delaunay_dict
 
     def show_delaunay(self, mpid="mp-19717", scale=1, is_primitive=False, structure=""):
         pts, ijk, matrix, atom_species, atoms_radius, atoms_color, atom_idxs = self.get_delaunay(mpid=mpid, scale=scale, is_primitive=is_primitive, structure=structure).values()
