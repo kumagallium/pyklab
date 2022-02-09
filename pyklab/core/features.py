@@ -503,8 +503,8 @@ class Features:
         df_feature = pd.DataFrame(features)
         return df_feature
 
-    def get_tetrahedron_index(self, i,ijks):
-        nn_faces = np.array([], dtype=np.float32)
+    def get_tetrahedron_nn_index(self, i,ijks):
+        nn_tets = np.array([], dtype=np.float32)
         flag = 0
         for j, ijk_2 in enumerate(ijks):
             for idx in range(4):
@@ -512,11 +512,27 @@ class Features:
                 ijk_tmp.pop(idx)
                 if (len(set(ijk_tmp)&set(ijk_2))==3) and (i!=j):
                     #print(ijk_tmp,ijk_2)
+                    nn_tets = np.append(nn_tets,j)
+                    break
+        if len(nn_tets) < 4:
+            flag = 1
+            nn_tets = np.append(nn_tets,[i]*(4-len(nn_tets)))
+        return nn_tets, flag
+    
+    def get_face_nn_index(self, i,ijks):
+        nn_faces = np.array([], dtype=np.float32)
+        flag = 0
+        for j, ijk_2 in enumerate(ijks):
+            for idx in range(3):
+                ijk_tmp = list(ijks[i].copy())
+                ijk_tmp.pop(idx)
+                if (len(set(ijk_tmp)&set(ijk_2))==3) and (i!=j):
+                    #print(ijk_tmp,ijk_2)
                     nn_faces = np.append(nn_faces,j)
                     break
-        if len(nn_faces) < 4:
+        if len(nn_faces) < 3:
             flag = 1
-            nn_faces = np.append(nn_faces,[i]*(4-len(nn_faces)))
+            nn_faces = np.append(nn_faces,[i]*(3-len(nn_faces)))
         return nn_faces, flag
 
     def get_delaunay_feature(self, pts, ijks, atom_species):
@@ -525,7 +541,7 @@ class Features:
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][2]].astype(np.float32), axis=0)
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][3]].astype(np.float32), axis=0)
         
-        tetra_idxs, flag = self.get_tetrahedron_index(0,ijks)
+        tetra_idxs, flag = self.get_tetrahedron_nn_index(0,ijks)
         mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
         mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
@@ -543,7 +559,7 @@ class Features:
             mesh_tmp = np.append(mesh_tmp,pts[ijk[2]].astype(np.float32), axis=0)
             mesh_tmp = np.append(mesh_tmp,pts[ijk[3]].astype(np.float32), axis=0)
 
-            tetra_idxs, flag = self.get_tetrahedron_index(1+idx,ijks)
+            tetra_idxs, flag = self.get_tetrahedron_nn_index(1+idx,ijks)
             mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
             mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
