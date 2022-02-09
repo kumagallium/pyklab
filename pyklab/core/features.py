@@ -535,7 +535,7 @@ class Features:
             nn_faces = np.append(nn_faces,[i]*(3-len(nn_faces)))
         return nn_faces, flag
 
-    def get_delaunay_feature(self, pts, ijks, atom_species):
+    def get_delaunay_feature_ctn(self, pts, ijks, atom_species):
         mesh_tmp = pts[ijks[0][0]].astype(np.float32)
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][1]].astype(np.float32), axis=0)
         mesh_tmp = np.append(mesh_tmp,pts[ijks[0][2]].astype(np.float32), axis=0)
@@ -545,7 +545,7 @@ class Features:
         mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
         mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
-        comp = atom_species[ijks[0][0]]+atom_species[ijks[0][1]]+atom_species[ijks[0][2]]
+        comp = atom_species[ijks[0][0]]+atom_species[ijks[0][1]]+atom_species[ijks[0][2]]+atom_species[ijks[0][3]]
         #comp = mg.Composition(comp_tmp).fractional_composition.formula
         
         feature = self.get_ave_atom_init(comp).astype(np.float32)
@@ -563,7 +563,7 @@ class Features:
             mesh_tmp = np.append(mesh_tmp,tetra_idxs.astype(np.float32), axis=0)
             mesh_tmp = np.append(mesh_tmp,[flag], axis=0)
 
-            comp = atom_species[ijk[0]]+atom_species[ijk[1]]+atom_species[ijk[2]]
+            comp = atom_species[ijk[0]]+atom_species[ijk[1]]+atom_species[ijk[2]]+atom_species[ijk[3]]
 
             #print(comp)
             
@@ -578,7 +578,7 @@ class Features:
 
     def create_ctn_datasets(self, mpid, delaunay_alldata):
         pts, ijks, _, atom_species, _, _, _ = delaunay_alldata
-        mesh_data = self.get_delaunay_feature(pts, ijks, atom_species)
+        mesh_data = self.get_delaunay_feature_ctn(pts, ijks, atom_species)
         mesh_dict = {}
         mesh_dict[mpid] = mesh_data
         if np.isnan(mesh_data.flatten()).sum() == 0:
