@@ -211,8 +211,6 @@ class Structure():
 
         x, y, z = pts.T
         i, j, k = ijk.T
-        print(len(pts))
-        print(len(ijk))
 
         xyz = list(product([2/5,3/5], repeat=3))
         xyz = [np.dot(np.array(xyz_tmp),matrix) for xyz_tmp in xyz]
@@ -426,16 +424,15 @@ class Structure():
         for sl in searchlist:
             connects[sl] = 1
             save_idxs = np.array(connects)^np.array([1]*len(adj))
-            idxs = np.array(adj[sl])
+            idxs = np.array(adj[sl]>0, dtype=int)
             searchidx = idxs & save_idxs
             new_searchlist.extend(np.where(np.array(searchidx) > 0)[0])
             new_searchlist = list(set(new_searchlist))
-            
+        
         if len(new_searchlist) <= 0:
             return np.sum(connects) == len(adj)
         
         return self.check_edges(adj, new_searchlist, connects)
-
 
     def is_cg_mpid(self, mpid, structure_tmp, is_primitive, scale, graphtype):
         try:
