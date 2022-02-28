@@ -573,7 +573,7 @@ class AD:
 
         return df_mape
 
-    def show_ranking_table(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata,filrel=50, rank=20, Tmin=300, Tmax=900, Ttick=100, height=2.5, width=4, imagename="", ascending=False):
+    def show_ranking_table(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata,filrel=50, rank=20, Tmin=300, Tmax=900, Ttick=100, height=5, width=10, imagename="", ascending=False):
         df_table_max = (df_table + (df_table * (df_mape/100))).copy()
         df_table_max = df_table_max.applymap(lambda x: '{:.3g}'.format(x))
         df_table_min = (df_table - (df_table * (df_mape/100))).copy()
@@ -653,7 +653,7 @@ class AD:
             temprange.append(str(T)+" K")
 
         dfstr = "" + dftop_filrel + "\n<" + dftopcls_filrel.astype(str) + ", " + dftoprel_filrel.astype(int).astype(str) + ", " + dftopmin_filrel.round(1).astype(str)+"~"+dftopmax_filrel.round(1).astype(str) + ">"
-        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 2.5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval_filrel.min().values), vmax=max(dftopval_filrel.max().values),yticklabels=1,xticklabels=temprange)
+        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval_filrel.min().values), vmax=max(dftopval_filrel.max().values),yticklabels=1,xticklabels=temprange)
 
         for i, T in enumerate(tqdm(range(Tmin, Tmax+Ttick, Ttick))):
             uniqcomp = []

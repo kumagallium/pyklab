@@ -13,14 +13,16 @@ from bokeh.sampledata.periodic_table import elements
 import networkx as nx
 import matplotlib.pyplot as plt
 
+from .element_color_schemes import ElementColorSchemes
+
 pmg = MPRester("UP0x1rTAXR52g7pi")
 elcolor = dict(zip(elements["atomic number"].values, elements["CPK"].values))
-
 
 class Structure():
 
     def __init__(self, structure_dirpath="structures/"):
         self.structure_dirpath = structure_dirpath
+        self.element_colors = ElementColorSchemes.get_element_color_schemes()
 
     def set_sig_fig(self, val):
         try:
@@ -112,7 +114,8 @@ class Structure():
                 atoms_radius.append(mg.Element(label_list[pidx]).atomic_radius*(10/scale))
             else:
                 atoms_radius.append(10/scale)
-            atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            #atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            atoms_color.append(self.element_colors["VESTA"][label_list[pidx]])
             atom_idxs.append(atom_idx_dict[label_list[pidx]])
             atom_species.append(label_list[pidx])
             pidx_dict[pidx] = i
@@ -183,7 +186,8 @@ class Structure():
                 atoms_radius.append(mg.Element(label_list[pidx]).atomic_radius*(10/scale))
             else:
                 atoms_radius.append(10/scale)
-            atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            #atoms_color.append(elements[elements["symbol"]==label_list[pidx]]["CPK"].values[0])
+            atoms_color.append(self.element_colors["VESTA"][label_list[pidx]])
             atom_idxs.append(atom_idx_dict[label_list[pidx]])
             atom_species.append(label_list[pidx])
             pidx_dict[pidx] = i
@@ -450,3 +454,16 @@ class Structure():
                 return False, mpid
         except:
             return False, mpid
+
+    def get_space_group_number(self, mpid, structure_tmp):
+        return SpacegroupAnalyzer(structure_tmp).get_space_group_number()
+
+    def get_crystal_system_number(self, mpid, structure_tmp):
+        cs_dict = {'trigonal': 0,
+            'monoclinic': 1,
+            'tetragonal': 2,
+            'triclinic': 3,
+            'cubic': 4,
+            'orthorhombic': 5,
+            'hexagonal': 6}
+        return cs_dict[SpacegroupAnalyzer(structure_tmp).get_crystal_system()]
