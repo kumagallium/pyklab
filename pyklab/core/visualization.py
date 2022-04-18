@@ -54,10 +54,17 @@ class Visualization:
                 line_kinds = df_data[c].unique()
                 #cmap = plt.get_cmap("jet")
                 lines = []
-                for i, kind in tqdm(enumerate(line_kinds)):
-                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=lw, alpha=alpha, label=kind)
+                if len(df_data[c].unique()) < 8:
+                    for i, kind in tqdm(enumerate(line_kinds)):
+                        ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=lw, alpha=alpha, label=kind)
+                else:
+                    for i, kind in tqdm(enumerate(line_kinds)):
+                        ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=lw, alpha=alpha, label=None)
+
             else:
-                ax.plot(df_data[x].values, df_data[y].values, lw=lw, alpha=alpha, c="red")
+                line_kinds = df_data[c].unique()
+                for i, kind in tqdm(enumerate(line_kinds)):
+                    ax.plot(df_data[df_data[c]==kind][x].values, df_data[df_data[c]==kind][y].values, lw=lw, alpha=alpha, c="red")
         if legend is True:
             if legend_pos == "left":
                 if len(df_data[c].unique()) < 8:
@@ -66,7 +73,6 @@ class Visualization:
                     ax.legend(loc='upper left', bbox_to_anchor=(0.01, 0.99), fontsize=2, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
 
             else:
-                print(df_data[c].unique())
                 if len(df_data[c].unique()) < 8:
                     ax.legend(loc='upper right', bbox_to_anchor=(0.99, 0.99), fontsize=8, facecolor='white', framealpha=1).get_frame().set_linewidth(0.5)
                 else:
