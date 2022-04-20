@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED 1
 
 ENV WORKDIR /code
 WORKDIR ${WORKDIR}
-COPY Pipfile ${WORKDIR}
+COPY Pipfile* ${WORKDIR}
 
 RUN apt update && apt -y install netcat
 RUN pip install --upgrade pip && \
