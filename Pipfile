@@ -15,6 +15,10 @@ llvmlite="0.31.0"
 pymatgen = "2022.4.19"
 matminer = "*"
 pycaret = "*"
+beautifulsoup4 = "*"
+ipywidgets = "*"
+nodejs = "*"
+bokeh = "*"
 
 [requires]
 python_version = "3.8.13"
