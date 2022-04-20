@@ -10,6 +10,6 @@ RUN apt update && apt -y install netcat
 RUN pip install --upgrade pip && \
     pip install pipenv
 
-RUN pipenv install --system --skip-lock
+RUN pipenv install --system
 
 COPY . /code/
