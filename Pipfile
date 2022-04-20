@@ -11,7 +11,10 @@ pylint = "*"
 [packages]
 matplotlib=">=3.4"
 jupyterlab = "*"
-pymatgen = "*"
+llvmlite="0.31.0"
+pymatgen = "2022.4.19"
+matminer = "*"
+pycaret = "*"
 
 [requires]
 python_version = "3.8.13"
