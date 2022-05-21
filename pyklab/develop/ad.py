@@ -10,6 +10,7 @@ from bokeh.sampledata.periodic_table import elements
 import collections
 import pickle
 import os
+import matplotlib
 import matplotlib.pyplot as plt
 from tqdm.notebook import tqdm
 
@@ -81,15 +82,45 @@ class AD:
         dists = nn.kneighbors(df, return_distance=True)[0]
         return (dists <= thlist).sum(axis=1)
 
-    def create_ad_starrydata_models(self, targets, df_train, inputsize):
+    def compare_models(self, target, df_train, inputsize):
+        train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
+        reg_models = regression.setup(train, target=target, session_id=1000, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
+        best_model_te = regression.compare_models()
+
+    def get_params(self, target):
+        selected_model = regression.load_model('models/model_'+target.replace(" ", "_"))
+        parmas_table = selected_model.get_params()["steps"][-1][1].get_params()
+        return parmas_table
+    
+    def plot_model(self, target, plot = 'feature_all'):
+        selected_model = regression.load_model('models/model_'+target.replace(" ", "_"))
+        regression.plot_model(selected_model.get_params()['steps'][-1][1], plot)
+    
+
+    def predicted_properties(self, target, data):
+        selected_model = regression.load_model('models/model_'+target.replace(" ", "_"))
+        pred_model = regression.predict_model(selected_model, data=data)
+        print(pred_model["Label"].values[0])
+
+
+    def create_ad_starrydata_models(self, targets, df_train, inputsize, tune_params={}):
+        models = {}
         for target in tqdm(targets):
             train = pd.concat([df_train.iloc[:, :inputsize], df_train[[target]]], axis=1)
-            reg_models = regression.setup(train, target=target, session_id=1000, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
-            selected_model = regression.create_model('rf', verbose=False)
-            final_model = regression.finalize_model(selected_model)
+            reg_models = regression.setup(train, target=target, session_id=1000, fold=5, silent=True, verbose=False, transform_target=True)  # ,transformation=True,transform_target=True
+            print("create")
+            selected_model = regression.create_model('rf', verbose=False)#, criterion="mae")
+            if len(tune_params) > 0:
+                print("tune")
+                tune_model = regression.tune_model(selected_model, verbose=False, custom_grid=tune_params, fold=2, search_algorithm='grid', early_stopping=True)
+            else:
+                tune_model = selected_model
+            final_model = regression.finalize_model(tune_model)
             if not os.path.exists(self.model_dirpath):
                 os.mkdir(self.model_dirpath)
             regression.save_model(final_model, model_name = self.model_dirpath + 'model_' + target.replace(" ", "_"))
+            models[target] = final_model
+        return models
 
     def create_final_model(self, target, df_data, inputsize):
         df_train_all = df_data.copy()
@@ -282,6 +313,7 @@ class AD:
     def save_parityplot_ad_starrydata_targets(self, targets, ad_reliability, df_test_inAD, df_test_outAD, inputsize):
         fig = plt.figure(figsize=(6, 6), dpi=300, facecolor='w', edgecolor='k')
         alflist = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
+        error_table = {}
         for idx, tg in enumerate(targets):
             ax = fig.add_subplot(2, 2, idx+1)
             ax.xaxis.set_ticks_position('both')
@@ -442,6 +474,14 @@ class AD:
                 t_max = trueAD.max()
 
             mape = (np.sum(np.abs(predAD-trueAD)/trueAD)/len(trueAD))
+            rmsle = mean_squared_log_error(trueAD, predAD)
+            mape_100 = (np.sum(np.abs(predAD-trueAD)/trueAD)/len(trueAD))*100
+            rmsle_out = mean_squared_log_error(trueAD_out, predAD_out)
+            mape_100_out = (np.sum(np.abs(predAD_out-trueAD_out)/trueAD_out)/len(trueAD_out))*100
+            r2_score_in = r2_score(trueAD, predAD)
+            r2_score_out = r2_score(trueAD_out, predAD_out)
+            error_table[tg] = {"mape":mape_100, "rmsle":rmsle, "mape_out":mape_100_out, "rmsle_out":rmsle_out, "r2_score":r2_score_in, "r2_score_out":r2_score_out}
+
             ax.plot([t_min-mape, t_max+mape*2], [t_min-mape, t_max+mape*2], alpha=0.1, lw=1, c="k")
 
             trueAD_viz = np.array([trueAD.max()+100])
@@ -462,6 +502,7 @@ class AD:
 
         plt.tight_layout()
         fig.savefig(self.image_dirpath+"TE_parityplot.png")
+        return pd.DataFrame(error_table)
 
     def set_matfamily(self, val, matfamily):
         try:
@@ -654,6 +695,116 @@ class AD:
 
         dfstr = "" + dftop_filrel + "\n<" + dftopcls_filrel.astype(str) + ", " + dftoprel_filrel.astype(int).astype(str) + ", " + dftopmin_filrel.round(1).astype(str)+"~"+dftopmax_filrel.round(1).astype(str) + ">"
         sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 5}, cmap='jet', cbar_kws={"pad":0.01,"aspect":50}, vmin=min(dftopval_filrel.min().values), vmax=max(dftopval_filrel.max().values),yticklabels=1,xticklabels=temprange)
+
+        for i, T in enumerate(tqdm(range(Tmin, Tmax+Ttick, Ttick))):
+            uniqcomp = []
+            for mat in learning_materials:
+                if len(dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T] == mat].index) > 0:
+                    if mat not in uniqcomp:
+                        ax.add_patch(Rectangle((i, dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=False, edgecolor='grey', lw=0.5))
+                        ax.add_patch(Rectangle((i, dftop_filrel.loc[:rank, T][dftop_filrel.loc[:rank, T]==mat].index[0]-1), 1, 1, fill=True, edgecolor=None, facecolor='grey', alpha=0.8, lw=0))
+                        uniqcomp.append(mat)
+            uniqcomp = []
+
+        plt.tight_layout()  # pad=0.4, w_pad=1, h_pad=1.0)
+
+        if imagename != "":
+            if not os.path.exists(self.image_dirpath):
+                os.mkdir(self.image_dirpath)
+            fig.savefig(self.image_dirpath+imagename+".png")
+
+        plt.show()
+
+
+    def show_ranking_table_detail(self, df_table, df_mape, df_reltable, df_clstable, df_leaningdata,filrel=50, rank=20, Tmin=300, Tmax=900, Ttick=100, height=5, width=10, imagename="", ascending=False):
+        df_table_max = (df_table + (df_table * (df_mape/100))).copy()
+        df_table_max = df_table_max.applymap(lambda x: '{:.3g}'.format(x))
+        df_table_min = (df_table - (df_table * (df_mape/100))).copy()
+        df_table_min[df_table_min < 0] = 0
+        df_table = df_table[df_table_min > 0]
+        df_table_min = df_table_min.applymap(lambda x: '{:.3g}'.format(x))
+
+        mpcomps = list(df_table.index)
+        dftop = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopval = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftoprel = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopcls = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopmax = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        dftopmin = pd.DataFrame([], columns=list(range(Tmin, Tmax, Ttick)))
+        for T in range(Tmin, Tmax+Ttick, Ttick):
+            dftop[T] = list(df_table.sort_values(by=[T], ascending=ascending).index)
+            index = df_table.sort_values(by=[T], ascending=ascending)[T].index
+            dftoprel[T] = list(df_reltable.loc[index, T].values)
+            dftopcls[T] = list(df_clstable.loc[index, T].values)
+            dftopmax[T] = list(df_table_max.loc[index, T].values)
+            dftopmin[T] = list(df_table_min.loc[index, T].values)
+            dftopval[T] = list(df_table.sort_values(by=[T], ascending=ascending)[T].values)
+
+        dftoprel = dftoprel.fillna(0)
+        dftopcls = dftopcls.fillna(0)
+
+        dftop_filrel = dftop[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopval_filrel = dftopval[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopcls_filrel = dftopcls[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftoprel_filrel = dftoprel[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopmax_filrel = dftopmax[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+        dftopmin_filrel = dftopmin[dftoprel > filrel].apply(lambda s: pd.Series(s.dropna().tolist()),axis=0)
+
+        dftop_filrel = dftop_filrel.fillna("")
+        #dftopval_filrel = dftopval_filrel.fillna(0)
+        dftoprel_filrel = dftoprel_filrel.fillna(0)
+        dftopcls_filrel = dftopcls_filrel.fillna(0)
+
+        learning_materials = df_leaningdata["composition"].unique()
+
+        dftop.index = dftop.index + 1
+        dftopval.index = dftopval.index + 1
+        dftoprel.index = dftoprel.index + 1
+        dftopcls.index = dftopcls.index + 1
+        dftopmin.index = dftopmin.index + 1
+        dftopmax.index = dftopmax.index + 1
+        dftop = dftop[dftopval > 0]
+
+        dftop_filrel.index = dftop_filrel.index + 1
+        dftopval_filrel.index = dftopval_filrel.index + 1
+        dftoprel_filrel.index = dftoprel_filrel.index + 1
+        dftopcls_filrel.index = dftopcls_filrel.index + 1
+        dftopmin_filrel.index = dftopmin_filrel.index + 1
+        dftopmax_filrel.index = dftopmax_filrel.index + 1
+        dftop_filrel = dftop_filrel[dftopval_filrel > 0]
+
+
+        plt.rcParams['font.size'] = 4.2
+        plt.rcParams['font.family'] = 'sans-serif'
+        plt.rcParams['font.sans-serif'] = ['Arial']
+        plt.rcParams['axes.linewidth'] = 1.2
+        plt.rcParams["axes.grid"] = False
+
+        fig = plt.figure(figsize=(width, height), dpi=400, facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(1, 1, 1)
+        ax.tick_params(pad=1)
+        ax.xaxis.set_ticks_position('top')
+        ax.tick_params(bottom="off", top="off")
+        ax.tick_params(left="off")
+        ax.tick_params(bottom=False,
+                    left=False,
+                    right=False,
+                    top=False)
+
+        temprange = []
+        for T in range(Tmin, Tmax + Ttick, Ttick):
+            temprange.append(str(T)+" K")
+
+        dfstr =dftop_filrel# + '\n'
+        dfstr2 = "Predicted cluster: " + dftopcls_filrel.astype(str) + "\nNumber of adjacent: " + dftoprel_filrel.astype(int).astype(str) + "\nPredicted value: " + dftopmin_filrel.round(1).astype(str)+"-"+dftopmax_filrel.round(1).astype(str)
+        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], cmap='jet', annot=False, vmin=0, vmax=max(dftopval_filrel.max().values),yticklabels=1,xticklabels=temprange, cbar_kws={'pad':0.01})
+        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], cmap='jet', annot=dfstr.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 7,"va": 'bottom'}, cbar=False)
+        sns.heatmap(dftopval_filrel.loc[:rank,Tmin:Tmax], cmap='jet', annot=dfstr2.loc[:rank,Tmin:Tmax],fmt = '', annot_kws={"size": 5, 'va':'top'}, cbar=False)
+
+        for t in ax.texts:
+            trans = t.get_transform()
+            offs = matplotlib.transforms.ScaledTranslation(0, -0.15, matplotlib.transforms.IdentityTransform())
+            t.set_transform( offs + trans )
 
         for i, T in enumerate(tqdm(range(Tmin, Tmax+Ttick, Ttick))):
             uniqcomp = []
