@@ -6,76 +6,38 @@ Set up an environment with a directory tree structure like the following.
 ```
 |-YOUR_WORKSPACE
   |- pyklab(<-get it from Github)
-  |- ~~.ipynb
+    |- pyklab
+    |- workdir
+      |- ~~.ipynb
 ```
 
-### <b>○ GUI</b>
-#### 1. After [starting jupyterlab](docs/jupyterlab_setup.md), create new notebook (e.g. setup.ipynb) for setup and run the following commands on the notebook.
-```
-!conda config --add channels conda-forge
-!conda config --add channels anaconda
-!conda config --add channels bokeh
-!conda install -y beautifulsoup4 ipywidgets git nodejs bokeh
-```
-```
-!pip install pymatgen pycaret matminer ipympl
-```
-```
-!pip uninstall -y numpy
-!pip install numpy==1.20.1
-```
-```
-!jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
-!jupyter labextension install @jupyterlab/toc jupyterlab-plotly
-```
-```
-!git clone https://github.com/kumagallium/pyklab.git
-```
+### <b>○ Docker-compose</b>
 
-<img width="1180" alt="vpd-image" src="docs/images/jupyterlab_install.png">
-<br><br>
+> <b>Requirements</b></br>
+> * Git (windows user): https://gitforwindows.org/
+> * Docker Desktop: https://matsuand.github.io/docs.docker.jp.onthefly/desktop/
 
-#### 2. If you want to update the library to the latest version, please run the following command on your workspace.
-```
-!git --git-dir=pyklab/.git fetch origin main
-!git --git-dir=pyklab/.git reset --hard origin/main
-```
-
-※You can also use the Anaconda prompt to do the installation, but here we show you how to do it without seeing the black command screen.
-
-※For detailed usage of jupyterlab, please see other sites.
-
-※If you are a windows user, you may need to install "Microsoft C++ Build Tools". In that case, please install it from the following URL.
-https://visualstudio.microsoft.com/visual-cpp-build-tools/
-<br><br>
-
-### <b>○ CLI</b>
-#### 1. Download the package from <a href="https://www.anaconda.com/products/individual">Anaconda's official website</a> and install it. Please make sure that the conda command is available.
-
-#### 2. By executing the following commands, you can download the pyklab library on an arbitrary workspace, and complete the creation of the execution environment.
+Run the following commands in a terminal (command prompt).
 
 ```sh
 cd YOUR_WORKSPACE
 git clone https://github.com/kumagallium/pyklab.git
-conda env create -n pyklab -f pyklab/conda_env.yml
-jupyter lab
-```
-<img width="1180" alt="vpd-image" src="docs/images/jupyterlab.png">
-<br><br>
-
-#### 3. If you want to update the library to the latest version, please execute the following commands.
-```
 cd pyklab
-git pull
+mkdir workdir
+docker-compose run up
 ```
+※Please tune docker desktop resources as needed.
 
 ## How to use
-On jupyterlab, you can start using this library by importing pyklab.
-
+1.  Put your program code in the "workdir" directory
+2.  Import this pyklab library
 ```python
+%load_ext autoreload
+%autoreload 2
+import sys
+sys.path.append('../')
 from pyklab import pyklab
 ```
-
 
 ## Contributing
 1. Fork it (`git clone https://github.com/kumagallium/pyklab.git`)
