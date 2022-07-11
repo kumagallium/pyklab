@@ -24,7 +24,7 @@ cd YOUR_WORKSPACE
 git clone https://github.com/kumagallium/pyklab.git
 cd pyklab
 mkdir workdir
-docker-compose run up
+docker-compose up
 ```
 ※Please tune docker desktop resources as needed.
 
